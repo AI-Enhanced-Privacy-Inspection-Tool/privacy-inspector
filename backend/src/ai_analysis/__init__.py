@@ -1,2 +1,15 @@
-# Subarea 2: AI analysis
-# Classifies sensitivity/risk based on content patterns (PII detection, tracker identification)
+from .models import (
+    PrivacyDataItem,
+    AIAnalysisRequest,
+    AIAnalysisResponse,
+    DataType,
+)
+from .service import analyzer
+
+__all__ = [
+    "PrivacyDataItem",
+    "AIAnalysisRequest",
+    "AIAnalysisResponse",
+    "DataType",
+    "analyzer",
+]
