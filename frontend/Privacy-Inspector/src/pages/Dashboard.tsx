@@ -1,16 +1,17 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Shield, Sparkles, AlertTriangle } from "lucide-react";
 import { Button } from "../components/Button";
 import { cn } from "../components/utils";
+import { ScanResults } from "./ScanResult";
 
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<"scan-results" | "ai-insights">("scan-results");
 
   return (
-    <div className="flex flex-col min-h-screen w-screen overflow-auto bg-gray-50">
+    <div className="flex flex-col min-h-screen w-full bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 max-w-full mx-auto">
+      <header className="w-full bg-white border-b border-gray-200">
+        <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-3">
             <Shield className="w-8 h-8 text-blue-600" />
             <div>
@@ -57,6 +58,13 @@ export function Dashboard() {
 
       {/* Main Content */}
       <main className="flex-1 max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeTab === "scan-results" ? (
+            <ScanResults />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+              <Sparkles className="w-12 h-12 mb-4 opacity-20" />
+            </div>
+        )}
       </main>
     </div>
   );
