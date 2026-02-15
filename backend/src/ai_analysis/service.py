@@ -197,24 +197,70 @@ class AIAnalyzer:
         
         recs = []
         
+        # Critical items - highest priority
         critical = [i for i in items if i.risk_assessment.risk_level == RiskLevel.CRITICAL]
-        high_risk = [i for i in items if i.risk_assessment.risk_level == RiskLevel.HIGH]
-        
         if critical:
-            recs.append(f"{len(critical)} CRITICAL risk items found - take action immediately")
-        if high_risk:
-            recs.append(f"{len(high_risk)} high risk items detected - review these soon")
+            pii_types = set()
+            for item in critical:
+                pii_types.update(item.classification.pii_types)
+            
+            if pii_types:
+                recs.append(f"CRITICAL: Found {len(critical)} item(s) with sensitive data ({', '.join(pii_types)}). Delete or encrypt immediately to prevent identity theft or fraud.")
+            else:
+                recs.append(f"CRITICAL: {len(critical)} high-risk item(s) detected. Review and secure immediately.")
         
+        # High risk items
+        high_risk = [i for i in items if i.risk_assessment.risk_level == RiskLevel.HIGH]
+        if high_risk:
+            pii_types = set()
+            for item in high_risk:
+                pii_types.update(item.classification.pii_types)
+            
+            if pii_types:
+                recs.append(f"HIGH RISK: {len(high_risk)} item(s) contain personal data ({', '.join(pii_types)}). Consider deleting or moving to encrypted storage.")
+            else:
+                recs.append(f"HIGH RISK: {len(high_risk)} item(s) should be reviewed and secured.")
+        
+        # PII breakdown by type
         pii_items = [i for i in items if i.classification.contains_pii]
         if pii_items:
-            recs.append(f"Found {len(pii_items)} items with personal information")
+            # Count PII types
+            pii_type_counts = {}
+            for item in pii_items:
+                for pii_type in item.classification.pii_types:
+                    pii_type_counts[pii_type] = pii_type_counts.get(pii_type, 0) + 1
+            
+            if pii_type_counts:
+                top_types = sorted(pii_type_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+                pii_summary = ", ".join([f"{count} {pii_type}" for pii_type, count in top_types])
+                recs.append(f"Personal Information Found: {pii_summary}. Review each item to determine if it should be kept, encrypted, or deleted.")
         
+        # Tracking data
         tracking = [i for i in items if i.classification.is_tracking_data]
         if tracking:
-            recs.append(f"{len(tracking)} tracking/analytics items found")
+            domains = set()
+            for item in tracking:
+                if item.domain:
+                    domains.add(item.domain)
+            
+            if domains:
+                domain_list = ", ".join(list(domains)[:3])
+                if len(domains) > 3:
+                    domain_list += f" and {len(domains) - 3} more"
+                recs.append(f"Tracking Data: {len(tracking)} tracking cookie(s) from {domain_list}. Clear browser cookies regularly to limit tracking.")
+            else:
+                recs.append(f"Tracking Data: {len(tracking)} tracking item(s) found. Consider clearing browser data.")
         
+        # Medium risk items
+        medium_risk = [i for i in items if i.risk_assessment.risk_level == RiskLevel.MEDIUM]
+        if medium_risk and not critical and not high_risk:
+            recs.append(f"{len(medium_risk)} medium-risk item(s) detected. Review when possible.")
+        
+        # Overall recommendation
         if not recs:
-            recs.append("No major privacy concerns detected")
+            recs.append("No major privacy concerns detected. Your data appears safe.")
+        elif critical or high_risk:
+            recs.append("Action Plan: Start with critical/high-risk items first, then review others. Always backup important data before deletion.")
         
         return recs
 
