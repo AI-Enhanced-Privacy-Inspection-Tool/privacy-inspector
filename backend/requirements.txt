@@ -1,5 +1,9 @@
-# Add project dependencies here
-# Example:
-# flask>=2.0.0
-# pandas>=1.3.0
-# sqlite3
+flask>=2.3.0
+requests>=2.31.0
+psutil>=5.9.0
+selenium>=4.10.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+urllib3>=2.0.0
+python-dotenv>=1.0.0
+sqlalchemy>=2.0.0
