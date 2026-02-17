@@ -163,16 +163,30 @@ class WebsiteSecurityScanner:
         }
         
         try:
-            # Check if website is reachable
-            response = self.session.head(url, timeout=self.timeout, allow_redirects=True)
-            report['is_reachable'] = response.status_code < 400
+            # Check if website is reachable - try HEAD first, fallback to GET
+            page_response = None
+            try:
+                response = self.session.head(url, timeout=self.timeout, allow_redirects=True)
+                # HEAD might return 405 (Method Not Allowed) - that's OK, means server is reachable
+                report['is_reachable'] = response.status_code != 405 and response.status_code < 400
+                if response.status_code == 405:
+                    # Server doesn't support HEAD, fallback to GET
+                    raise requests.exceptions.RequestException("HEAD method not allowed")
+            except requests.exceptions.RequestException:
+                # Fallback to GET if HEAD fails (some servers don't support HEAD)
+                try:
+                    page_response = self.session.get(url, timeout=self.timeout)
+                    report['is_reachable'] = page_response.status_code < 400
+                except requests.exceptions.RequestException:
+                    report['is_reachable'] = False
             
             if not report['is_reachable']:
                 report['overall_risk_level'] = 'unreachable'
                 return report
             
-            # Get full page for detailed analysis
-            page_response = self.session.get(url, timeout=self.timeout)
+            # Get full page for detailed analysis if not already fetched
+            if page_response is None:
+                page_response = self.session.get(url, timeout=self.timeout)
             
             # Perform security checks
             report['ssl_certificate'] = self._check_ssl_certificate(url)
