@@ -1,18 +1,74 @@
-import { ShieldCheck, AlertCircle, Cookie, Fingerprint, Database, CheckCircle2, FolderOpen } from "lucide-react";
+import { ShieldCheck, AlertCircle, Cookie, Fingerprint, Database, FolderOpen, Play, Sparkles, ChevronDown } from "lucide-react";
 import { RiskBadge } from "../components/RiskBadge";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardAction } from "../components/Card";
+import { Card, CardContent } from "../components/Card";
+import { Button } from "../components/Button";
+import LoadingScan from "../components/LoadingScan";
+import { useState } from "react";
+import { LocalAiInsight } from "../components/LocalAiInsight";
 
 export function ScanResults() {
+  const [isScanning, setIsScanning] = useState(false);
+  const [expandedInsight, setExpandedInsight] = useState<string | null>(null);
+
+  const handleStartScan = () => {
+    setIsScanning(true);
+  };
+
+  const toggleInsight = (id: string) => {
+    setExpandedInsight(expandedInsight === id ? null : id);
+  };
+
+  if (isScanning) {
+    return <LoadingScan onStop={() => setIsScanning(false)} />;
+  }
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">  
+    <div className="w-full max-w-6xl mx-auto px-6 space-y-8 animate-in fade-in duration-500">  
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">
-          Privacy Scan Results
-        </h2>
-        <p className="text-gray-500">
-          Summary of privacy issues detected in your system
-        </p>
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Privacy Scan Results
+          </h2>
+          <p className="text-gray-500">
+            Summary of privacy issues detected in your system
+          </p>
+        </div>
+
+        {/* Privacy Scan Card */}
+        <div className="bg-[#f5f8ff] border border-[#e2e8f0] rounded-2xl p-8">
+          <div className="flex flex-col gap-4">
+            {/* Icon and Title */}
+            <div className="flex items-center gap-3">
+              <FolderOpen className="w-6 h-6 text-gray-800" strokeWidth={2.5} />
+              <h3 className="text-lg font-bold text-gray-900">
+                Start Local Privacy Scan
+              </h3>
+            </div>
+
+            {/* Description */}
+            <p className="text-gray-500 text-lg">
+              Scan your local system for cookies, browser data, and application privacy risks
+            </p>
+
+            {/* Action Button */}
+            <div className="mt-2">
+              <Button size="lg" 
+                icon={Play}
+                onClick={handleStartScan} 
+                className="bg-[#1a68ff] hover:bg-[#0052cc] rounded-lg px-8 font-semibold">
+                Run Scan
+              </Button>
+            </div>
+
+            {/* Note Section */}
+            <div className="mt-4 bg-white/60 rounded-xl p-4 border border-white/40">
+              <p className="text-sm text-gray-600">
+                <span className="font-bold text-gray-800">Note:</span> The scan will analyze browser cookies, local storage, session data, and application data for privacy risks. This process may take a few moments.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Last Scan Summary */}
@@ -34,9 +90,9 @@ export function ScanResults() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
               {[
-                { label: "Cookies", value: "8" },
-                { label: "Identifiers", value: "6" },
-                { label: "Apps Scanned", value: "6" },
+                { label: "Cookies", value: "1" },
+                { label: "Identifiers", value: "1" },
+                { label: "Apps Scanned", value: "1" },
                 { label: "Total Data", value: "8.5 MB" },
               ].map((stat) => (
                 <Card key={stat.label} className="shadow-none">
@@ -125,41 +181,47 @@ export function ScanResults() {
           </h3>
         </div>
 
-        <Card className="shadow-sm">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <CardTitle className="text-gray-800 font-mono text-lg font-medium">
+        <Card className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
+          <CardContent className="p-6">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-lg font-bold text-gray-900">
                 fr
-              </CardTitle>
-
-              <CardAction className="flex gap-2">
-                <RiskBadge variant="high">High Risk</RiskBadge>
-                <RiskBadge variant="info">advertising</RiskBadge>
-              </CardAction>
+              </span>
+              <RiskBadge variant="high" className="bg-[#fff1e7] text-[#d97706] border-none font-bold">
+                High Risk
+              </RiskBadge>
             </div>
 
-            <CardDescription className="text-gray-500 font-medium">
-              .facebook.com
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-              <p className="text-sm text-slate-700">
-                <span className="font-bold">Problem:</span> Facebook advertising
-                cookie used for cross-site tracking and ad targeting.
+            {/* Information */}
+            <div className="space-y-2 text-sm text-gray-600 mb-6">
+              <p>
+                <span className="font-medium text-gray-400">Domain:</span> 
+                <span className="ml-2 font-medium text-gray-700">.facebook.com</span>
               </p>
+              <p>
+                <span className="font-medium text-gray-400">Category:</span> 
+                <span className="ml-2 font-medium text-gray-700">advertising</span>
+              </p>
+              <p>
+                <span className="font-medium text-gray-400">Path:</span> 
+                <span className="ml-2 font-mono text-gray-700">accounts.app.username</span>
+              </p>
+              <p>
+                <span className="font-medium text-gray-400">Expires:</span> 
+                <span className="ml-2 font-medium text-gray-700">Apr 29, 2026, 3:00 AM</span>
+              </p>
+            </div>
 
-              <div className="flex gap-6 mt-3 text-xs text-slate-400 font-medium">
-                <span>Size: 256 B</span>
-                <span>Expires: 4/29/2026</span>
-                <span className="flex items-center gap-1 text-green-600">
-                  <CheckCircle2 className="w-3 h-3" /> Secure: ✓
-                </span>
-                <span className="flex items-center gap-1 text-green-600">
-                  <CheckCircle2 className="w-3 h-3" /> HttpOnly: ✓
-                </span>
-              </div>
+            {/* AI Privacy Insight */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <button onClick={() => toggleInsight('cookie-1')} className="flex items-center justify-between w-full px-4 py-3 bg-[#fafafa] rounded-xl border border-gray-100 group">
+                <div className="flex items-center gap-2 text-[#8b5cf6] font-semibold text-sm">
+                  <Sparkles className="size-4 fill-current" /> AI Privacy Insight
+                </div>
+                <ChevronDown className={`size-4 text-gray-400 transition-transform ${expandedInsight === 'cookie-1' ? 'rotate-180' : ''}`} />
+              </button>
+              {expandedInsight === 'cookie-1' && <LocalAiInsight type="cookie" />}
             </div>
           </CardContent>
         </Card>
@@ -174,35 +236,45 @@ export function ScanResults() {
           </h3>
         </div>
 
-        <Card className="shadow-sm">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <CardTitle className="text-gray-800 font-mono text-lg font-medium">
-                FINGERPRINT
-              </CardTitle>
-
-              <CardAction className="flex gap-2">
-                <RiskBadge variant="critical">Critical Risk</RiskBadge>
-                <RiskBadge variant="persistent">Persistent</RiskBadge>
-              </CardAction>
+        <Card className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-lg font-bold text-gray-900">FINGERPRINT</span>
+              <RiskBadge variant="critical" className="bg-red-50 text-red-600 border-none font-bold">
+                Critical Risk
+              </RiskBadge>
             </div>
 
-            <CardDescription className="text-gray-500 font-medium">
-              Canvas Fingerprinting (multiple sites)
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-              <p className="text-sm text-slate-700">
-                <span className="font-bold">Problem:</span> Browser fingerprint
-                detected. This unique identifier can track you across websites
-                even without cookies.
+            <div className="space-y-2 text-sm text-gray-600 mb-6">
+              <p>
+                <span className="font-medium text-gray-400">Description:</span> 
+                <span className="ml-2 font-medium text-gray-700">Canvas Fingerprinting detected across multiple sites</span>
               </p>
+              <p>
+                <span className="font-medium text-gray-400">Path:</span> 
+                <span className="ml-2 font-mono text-gray-700">browser.fingerprint.canvas_id</span>
+              </p>
+              <p>
+                <span className="font-medium text-gray-400">Value:</span> 
+                <span className="ml-2 font-mono text-gray-700">fp_a1b2c3d4e5...</span>
+              </p>
+              <p>
+                <span className="font-medium text-gray-400">Last Seen:</span> 
+                <span className="ml-2 font-medium text-gray-700">Jan 29, 2026, 12:30 PM</span>
+              </p>
+            </div>
 
-              <div className="mt-3 text-xs text-slate-400 font-medium">
-                Value: fp_a1b2c3d4e5f6... | Last Seen: Jan 29, 2026, 12:30 PM
-              </div>
+            {/* AI Privacy Insight */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <button 
+                onClick={() => toggleInsight('id-1')} 
+                className="flex items-center justify-between w-full px-4 py-3 bg-[#fafafa] rounded-xl border border-gray-100 group">
+                <div className="flex items-center gap-2 text-[#8b5cf6] font-semibold text-sm">
+                  <Sparkles className="size-4 fill-current" /> AI Privacy Insight
+                </div>
+                <ChevronDown className={`size-4 text-gray-400 transition-transform ${expandedInsight === 'id-1' ? 'rotate-180' : ''}`} />
+              </button>
+              {expandedInsight === 'id-1' && <LocalAiInsight type="identifier" />}
             </div>
           </CardContent>
         </Card>
@@ -217,49 +289,39 @@ export function ScanResults() {
           </h3>
         </div>
 
-        <Card className="shadow-sm">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <CardTitle className="text-gray-800 font-mono text-lg font-medium">
-                Google Chrome
-              </CardTitle>
-
-              <CardAction className="flex gap-2">
-                <RiskBadge variant="high">High Risk</RiskBadge>
-                <RiskBadge variant="pii">Contains PII</RiskBadge>
-              </CardAction>
+        <Card className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-lg font-bold text-gray-900">Google Chrome</span>
+              <RiskBadge variant="high" className="bg-[#fff1e7] text-[#d97706] border-none font-bold">
+                High Risk
+              </RiskBadge>
             </div>
 
-            <CardDescription className="text-gray-500 font-medium">
-              /Users/user/Library/Application Support/Google/Chrome
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-3">
-              <p className="text-sm text-slate-700">
-                <span className="font-bold">Problem:</span> Chrome stores
-                extensive user data including browsing history and auto-fill
-                information.
+            <div className="space-y-2 text-sm text-gray-600 mb-6">
+              <p>
+                <span className="font-medium text-gray-400">Path:</span> 
+                <span className="ml-2 font-mono text-gray-700">/Library/Application Support/Google/Chrome</span>
               </p>
-
-              <div className="flex flex-wrap gap-2">
-                {["Cookies", "Cache", "History", "LocalStorage", "IndexedDB"].map(
-                  (tag) => (
-                    <RiskBadge
-                      key={tag}
-                      variant="info"
-                      className="bg-slate-200 text-slate-700 normal-case font-medium"
-                    >
-                      {tag}
-                    </RiskBadge>
-                  )
-                )}
-              </div>
-
-              <p className="text-xs text-slate-400 font-medium">
-                Total Size: 2.3 MB
+              <p>
+                <span className="font-medium text-gray-400">Category:</span> 
+                <span className="ml-2 font-medium text-gray-700">Contains PII (History, Autofill, Cookies)</span>
               </p>
+              <p>
+                <span className="font-medium text-gray-400">Total Size:</span> 
+                <span className="ml-2 font-medium text-gray-700">2.3 MB</span>
+              </p>
+            </div>
+
+            {/* AI Privacy Insight */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <button onClick={() => toggleInsight('app-1')} className="flex items-center justify-between w-full px-4 py-3 bg-[#fafafa] rounded-xl border border-gray-100 group">
+                <div className="flex items-center gap-2 text-[#8b5cf6] font-semibold text-sm">
+                  <Sparkles className="size-4 fill-current" /> AI Privacy Insight
+                </div>
+                <ChevronDown className={`size-4 text-gray-400 transition-transform ${expandedInsight === 'app-1' ? 'rotate-180' : ''}`} />
+              </button>
+              {expandedInsight === 'app-1' && <LocalAiInsight type="app" />}
             </div>
           </CardContent>
         </Card>
