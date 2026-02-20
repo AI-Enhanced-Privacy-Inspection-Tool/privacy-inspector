@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 from app_scanner.detection.empty_value_detector import is_empty_value
 from ..detection.patterns import PRIVACY_CATEGORIES, normalize_key
@@ -26,7 +27,11 @@ def walk_json(obj, findings, path="", seen=None):
                     if is_empty_value(value):
                         break
                      
-                    record = (value)
+                    try:
+                        record = json.dumps(value, sort_keys=True)
+                    except TypeError:
+                        record = str(value)
+
                     # check if we've already recorded a finding for this path and category to avoid duplicates
                     if record not in seen:
                         seen.add(record)
@@ -77,14 +82,20 @@ def scan_json_file(path):
     findings = []
 
     try:
+        # check if file is empty first
+        if Path(path).stat().st_size == 0:
+            return findings
+
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
-            data = json.load(f)
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError as e:
+                return findings
 
         walk_json(data, findings)
 
         # attach the file path to each finding so callers always know origin
         try:
-            from pathlib import Path
             abs_path = str(Path(path).resolve())
         except Exception:
             abs_path = str(path)
@@ -95,6 +106,7 @@ def scan_json_file(path):
                 finding["file_path"] = abs_path
 
     except Exception as e:
-        print(f"[ERROR] Failed scanning JSON file {path}: {e}")
+        #print(f"[ERROR] Failed scanning JSON file {path}: {e}")
+        pass
 
     return findings
