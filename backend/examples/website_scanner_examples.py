@@ -94,12 +94,7 @@ def example_2_scan_multiple_websites():
     
     print(f"{'Website':<30} {'Risk Level':<15} {'Risk Score':<12}")
     print("-" * 60)
-    for report in sorted_reports:
-        domain = report['url'].replace('https://', '').replace('http://', '').split('/')[0]
-        risk_level = report['overall_risk_level'].upper()
-        risk_score = report['risk_score']
-        print(f"{domain:<30} {risk_level:<15} {risk_score:<12}")
-
+    # (Example removed)
 
 def example_3_detect_active_websites():
     """Example 3: Detect active/recent websites from browser."""
@@ -239,7 +234,6 @@ def main():
     try:
         # Run examples
         example_1_scan_single_website()
-        example_2_scan_multiple_websites()
         
         print_separator("Checking Browser History Access")
         print("Note: The following examples scan websites from your browser history.")

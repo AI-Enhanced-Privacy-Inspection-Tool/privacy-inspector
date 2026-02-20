@@ -18,7 +18,7 @@ from datetime import datetime
 from src.scanner.website_scanner import WebsiteSecurityScanner
 from src.scanner.active_website_detector import ActiveWebsiteDetector
 from src.scanner.models import (
-    WebsiteScanResult, BulkScanResult, RiskLevel
+    WebsiteScanResult, RiskLevel
 )
 
 logger = logging.getLogger(__name__)
@@ -73,60 +73,19 @@ class WebsiteScannerAPI:
     
     def scan_active_websites(self, browser: Optional[str] = None, 
                            limit: int = 10) -> Dict:
-        """
-        Scan recently active websites for security risks.
-        
-        Args:
-            browser (str): Specific browser to scan
-            limit (int): Maximum number of websites to scan
-            
-        Returns:
-            Dict: Bulk scan results
-        """
-        logger.info(f"Starting bulk scan of active websites from {browser or 'all'}")
-        
-        # Get active websites
-        websites = self.detector.get_active_websites(browser)[:limit]
-        
-        # Create bulk result
-        bulk_result = BulkScanResult(total=len(websites))
-        
-        # Scan each website
-        for website in websites:
-            try:
-                report = self.scanner.scan_website(website['url'])
-                bulk_result.add_report(report)
-            except Exception as e:
-                logger.error(f"Error scanning {website['url']}: {str(e)}")
-                bulk_result.add_error(website['url'], str(e))
-        
-        logger.info(f"Bulk scan completed: {bulk_result.completed}/{bulk_result.total} successful")
-        return bulk_result.to_dict()
+        # Bulk scanning of active/recent websites has been removed.
+        # Use `scan_website` to perform single-URL scans only.
+        logger.warning("scan_active_websites called but bulk scanning is disabled")
+        return {
+            'total': 0,
+            'completed': 0,
+            'failed': 0,
+            'reports': [],
+            'timestamp': datetime.now().isoformat(),
+            'message': 'Bulk scanning is disabled. Use /scan to scan a single website.'
+        }
     
-    def scan_multiple_websites(self, urls: List[str]) -> Dict:
-        """
-        Scan multiple specified websites.
-        
-        Args:
-            urls (List[str]): List of URLs to scan
-            
-        Returns:
-            Dict: Bulk scan results
-        """
-        logger.info(f"Starting bulk scan of {len(urls)} websites")
-        
-        bulk_result = BulkScanResult(total=len(urls))
-        
-        for url in urls:
-            try:
-                report = self.scanner.scan_website(url)
-                bulk_result.add_report(report)
-            except Exception as e:
-                logger.error(f"Error scanning {url}: {str(e)}")
-                bulk_result.add_error(url, str(e))
-        
-        logger.info(f"Bulk scan completed: {bulk_result.completed}/{bulk_result.total} successful")
-        return bulk_result.to_dict()
+
     
     def get_scan_summary(self, report: Dict) -> Dict:
         """
@@ -145,7 +104,7 @@ class WebsiteScannerAPI:
             'risk_score': report['risk_score'],
             'overall_risk_level': report['overall_risk_level'],
             'issues_found': {
-                'missing_security_headers': len(report['security_headers'].get('missing', {})),
+                'missing_security_headers': en(report['security_headers'].get('missing', {})),
                 'mixed_content': len(report['mixed_content_issues']),
                 'tracking_scripts': len(report['tracking_scripts']),
                 'vulnerable_libraries': len(report['vulnerable_libraries']),
@@ -310,109 +269,6 @@ def get_active_websites_endpoint():
             'success': False,
             'error': str(e)
         }), 500
-
-
-@website_scanner_bp.route('/scan-active', methods=['GET'])
-def scan_active_websites_endpoint():
-    """
-    Endpoint to scan active websites from browser history.
-    
-    Query parameters:
-        - browser: 'chrome', 'firefox', 'edge', or 'all' (default: all)
-        - limit: Maximum websites to scan (default: 10)
-    
-    Response:
-        {
-            "success": true,
-            "data": {
-                "summary": {
-                    "total": 10,
-                    "completed": 10,
-                    "failed": 0,
-                    "timestamp": "..."
-                },
-                "reports": [...]
-            }
-        }
-    """
-    try:
-        browser = request.args.get('browser', 'all')
-        limit = min(int(request.args.get('limit', 10)), 50)
-        
-        result = api_handler.scan_active_websites(browser, limit)
-        
-        return jsonify({
-            'success': True,
-            'data': result
-        }), 200
-        
-    except Exception as e:
-        logger.error(f"Error in scan_active_websites_endpoint: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
-@website_scanner_bp.route('/scan-multiple', methods=['POST'])
-def scan_multiple_websites_endpoint():
-    """
-    Endpoint to scan multiple specified websites.
-    
-    Request body:
-        {
-            "urls": ["https://example.com", "https://test.com"]
-        }
-    
-    Response:
-        {
-            "success": true,
-            "data": {
-                "summary": {...},
-                "reports": [...]
-            }
-        }
-    """
-    try:
-        data = request.get_json()
-        
-        if not data or 'urls' not in data:
-            return jsonify({
-                'success': False,
-                'error': 'URLs list is required'
-            }), 400
-        
-        urls = data['urls']
-        
-        if not isinstance(urls, list):
-            return jsonify({
-                'success': False,
-                'error': 'URLs must be a list'
-            }), 400
-        
-        if not urls:
-            return jsonify({
-                'success': False,
-                'error': 'At least one URL is required'
-            }), 400
-        
-        # Limit to 20 URLs per request
-        urls = urls[:20]
-        
-        result = api_handler.scan_multiple_websites(urls)
-        
-        return jsonify({
-            'success': True,
-            'data': result
-        }), 200
-        
-    except Exception as e:
-        logger.error(f"Error in scan_multiple_websites_endpoint: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
 
 @website_scanner_bp.route('/risky-websites', methods=['POST'])
 def get_risky_websites_endpoint():
