@@ -14,10 +14,10 @@ def main():
     for file_type, count in counts.items():
         print(f"{count} {file_type} files found")
 
-    #print(f"\nTotal findings: {len(findings)}\n")
+    print(f"\nTotal findings: {len(findings)}\n")
 
-    #for finding in findings[:20]:
-    #    print(finding)
+    for finding in findings[:20]:
+        print(finding)
 
     print("\nCompact Results by App:\n")
 

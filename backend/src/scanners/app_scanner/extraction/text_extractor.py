@@ -5,8 +5,10 @@ from ..detection.string_detection.string_detector import detect_string_type
 def walk_text(file_obj, findings, seen=None):
     """
     Walk through a text file line by line and detect privacy-relevant strings.
+    Args:
+        file_obj: An open file object for the text file.
+        findings: A list where results are stored.
     """
-
     if seen is None:
         seen = set()
 
@@ -30,11 +32,13 @@ def walk_text(file_obj, findings, seen=None):
 def scan_text_file(path):
     """
     Scans a text file for privacy-relevant information and returns a list of findings.
+    Args:
+        path: The path to the text file to scan.
+    Returns:
+        A list of findings, where each finding is a dictionary containing information about a privacy-relevant value found in the text file.
     """
 
     findings = []
-
-    # TODO: deal with no permission files
 
     try:
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
@@ -45,8 +49,12 @@ def scan_text_file(path):
         for finding in findings:
             if "file_path" not in finding:
                 finding["file_path"] = abs_path
+    
+    except (PermissionError, OSError):
+        return findings
 
     except Exception as e:
         print(f"[ERROR] Failed scanning text file {path}: {e}")
+        return findings
 
     return findings

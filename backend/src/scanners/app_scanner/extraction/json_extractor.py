@@ -23,7 +23,7 @@ def walk_json(obj, findings, path="", seen=None):
 
             # key-based detection
             for category in PRIVACY_CATEGORIES:
-                if category in normalized_key:
+                if category == normalized_key:
                     if is_empty_value(value):
                         break
                      
@@ -105,8 +105,11 @@ def scan_json_file(path):
             if "file_path" not in finding:
                 finding["file_path"] = abs_path
 
+    except (PermissionError, OSError):
+        return findings
+    
     except Exception as e:
-        #print(f"[ERROR] Failed scanning JSON file {path}: {e}")
-        pass
+        print(f"[ERROR] Failed scanning JSON file {path}: {e}")
+        return findings
 
     return findings

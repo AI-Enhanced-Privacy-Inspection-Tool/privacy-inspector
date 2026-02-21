@@ -1,9 +1,9 @@
 import re
 
 RAW_PRIVACY_CATEGORIES = {
-    "email", # this
-    "username", # this
-    "user_id", # this
+    "email", 
+    "username", 
+    "user_id", 
     "ip_address",
     "device_id",
     "auth_token",

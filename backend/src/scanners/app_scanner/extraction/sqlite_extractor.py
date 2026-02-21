@@ -6,6 +6,9 @@ from ..detection.string_detection.string_detector import detect_string_type
 def walk_sqlite(conn, findings, seen=None):
     """
     Walk through all tables and columns in the SQLite DB and detect privacy-relevant strings.
+    Args:
+        conn: An active connection to the SQLite database.
+        findings: A list where results are stored.
     """
     if seen is None:
         seen = set()
@@ -43,7 +46,7 @@ def walk_sqlite(conn, findings, seen=None):
                     
                     # if no value-based match, try key-based detection using the column name
                     for category in PRIVACY_CATEGORIES:
-                        if category in columns[col_index].lower():
+                        if category == columns[col_index].lower():
                             record = col_value_str
                             if record not in seen:
                                 seen.add(record)
@@ -58,13 +61,17 @@ def walk_sqlite(conn, findings, seen=None):
                             break  # stop checking other categories
 
         except Exception as e:
-            # print(f"[WARNING] Failed to scan table {table_name}: {e}")
+            print(f"[WARNING] Failed to scan table {table_name}: {e}")
             continue
 
 
 def scan_sqlite_file(path):
     """
     Scans a SQLite database for privacy-relevant information and returns a list of findings.
+    Args:
+        path: The path to the SQLite database file.
+    Returns:
+        A list of findings, where each finding is a dictionary containing details about the detected privacy-relevant data.
     """
     findings = []
 
@@ -77,6 +84,9 @@ def scan_sqlite_file(path):
         for finding in findings:
             if "file_path" not in finding:
                 finding["file_path"] = abs_path
+    
+    except (PermissionError, OSError):
+        return findings
 
     except Exception as e:
         print(f"[ERROR] Failed scanning SQLite file {path}: {e}")
