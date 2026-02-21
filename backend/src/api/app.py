@@ -11,6 +11,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],
@@ -53,6 +54,8 @@ async def scan_desktop():
     try:
         counts, all_findings, compacted_results, formatted_results = scan_app_files()
 
+        print("Scanning triggered!")
+
         data_items = []
 
         for app_name, categories in compacted_results.items():
@@ -71,7 +74,6 @@ async def scan_desktop():
         # Attach raw scanner context into the summary for frontend use
         result.summary.setdefault("scanner", {})
         result.summary["scanner"]["file_counts"] = {k: int(v) for k, v in counts.items()}
-        result.summary["scanner"]["compact_results"] = compacted_results
         result.summary["scanner"]["formatted_results"] = formatted_results
 
         return result

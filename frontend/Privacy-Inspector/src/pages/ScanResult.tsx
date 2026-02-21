@@ -15,12 +15,15 @@ export function ScanResults() {
     setIsScanning(true); 
 
     try {
-      const response = await fetch("http://localhost:8000/scan"); 
+      const response = await fetch("http://localhost:8000/scan/desktop", {
+        method: "POST",
+      });
       const data = await response.json();
-      setScanResults(data.formatted || data.compacted || data.all_findings); 
+      setScanResults(data); 
     } catch (error) {
       console.error("Error running scan:", error);
     } finally {
+      console.log("Scan completed or failed. Results:", scanResults);
       setIsScanning(false); 
     }
   };
