@@ -1,7 +1,7 @@
 import sqlite3
 from pathlib import Path
-from app_scanner.detection.patterns import PRIVACY_CATEGORIES
-from app_scanner.detection.string_detection.string_detector import detect_string_type
+from ..detection.patterns import PRIVACY_CATEGORIES
+from ..detection.string_detection.string_detector import detect_string_type
 
 def walk_sqlite(conn, findings, seen=None):
     """

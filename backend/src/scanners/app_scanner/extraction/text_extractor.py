@@ -1,5 +1,6 @@
-from app_scanner.detection.string_detection.string_detector import detect_string_type
 from pathlib import Path
+
+from ..detection.string_detection.string_detector import detect_string_type
 
 def walk_text(file_obj, findings, seen=None):
     """

@@ -48,7 +48,6 @@ def scan_app_files(filter_category=None):
             all_findings.append(finding)
             results[app_name].add(finding["category"])
     
-    
     compacted_results = compact_results(all_findings)
     formatted_results = format_results(all_findings)
 
