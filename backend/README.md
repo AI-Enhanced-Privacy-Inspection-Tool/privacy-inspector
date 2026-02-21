@@ -24,11 +24,25 @@ Server runs at: http://localhost:8000
 
 ## API Endpoints
 
+### GET /
+Basic API info.
+
 ### GET /health
-Check if server is running
+Check if server is running and whether `GOOGLE_API_KEY` is configured.
 
 ### POST /analyze
-Analyze privacy data
+Generic AI analysis endpoint. Accepts a JSON body with `data_items` (list of privacy data items) and returns an `AIAnalysisResponse`.
+
+### POST /scan/desktop
+Run the local desktop scanner and AI analysis in one step.
+
+- Scans Windows app data folders for JSON/text/SQLite files
+- Builds a compact map of `app -> [categories]`
+- Sends synthetic items into Gemini for risk analysis
+- Returns an `AIAnalysisResponse` with:
+	- `analyzed_items`: one per `(app, category)`
+	- `summary` including counts and risk breakdown
+	- `summary.scanner.file_counts` and `summary.scanner.compact_results`
 
 ## Testing
 
@@ -44,6 +58,13 @@ backend/
 │   │   ├── models.py
 │   │   ├── prompts.py
 │   │   └── service.py
+│   ├── scanners/
+│   │   └── app_scanner/
+│   │       ├── scanner.py
+│   │       ├── main.py
+│   │       ├── discovery/
+│   │       ├── extraction/
+│   │       └── detection/
 │   └── api/app.py
 └── requirements.txt
 ```
