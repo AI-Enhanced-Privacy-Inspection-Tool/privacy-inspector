@@ -9,15 +9,40 @@ import { LocalAiInsight } from "../components/LocalAiInsight";
 export function ScanResults() {
   const [isScanning, setIsScanning] = useState(false);
   const [expandedInsight, setExpandedInsight] = useState<string | null>(null);
-  const [scanResults, setScanResults] = useState<any>(null); 
+  const [scanResults, setScanResults] = useState<any>({
+    cookies: [],
+    identifiers: [],
+    apps: [],
+    totalSize: "0 MB",
+    highRiskCount: 0,
+  }); 
 
   const handleStartScan = async () => {
     setIsScanning(true); 
 
     try {
-      const response = await fetch("http://localhost:8000/scan"); 
+      const response = await fetch("http://localhost:8000/scan/desktop", { method: "POST" });
       const data = await response.json();
-      setScanResults(data.formatted || data.compacted || data.all_findings); 
+
+      const scanner = data.summary?.scanner || {};
+      const formattedResults = scanner.formatted_results || [];
+
+      // Map to frontend structure
+      const cookies = formattedResults.filter((item: any) => item.metadata?.category === "cookie");
+      const identifiers = formattedResults.filter((item: any) => item.metadata?.category === "identifier");
+      const apps = formattedResults.filter((item: any) => item.metadata?.category === "app");
+
+      // Calculate total size if available
+      const totalSize = apps.reduce((acc: number, app: any) => acc + (app.metadata?.size || 0), 0);
+      const highRiskCount = formattedResults.filter((item: any) => item.risk === "high" || item.risk === "critical").length;
+
+      setScanResults({
+        cookies,
+        identifiers,
+        apps,
+        totalSize: totalSize > 0 ? `${totalSize} MB` : "0 MB",
+        highRiskCount,
+      });
     } catch (error) {
       console.error("Error running scan:", error);
     } finally {
@@ -212,15 +237,15 @@ export function ScanResults() {
             <div className="space-y-2 text-sm text-gray-600 mb-6">
               <p>
                 <span className="font-medium text-gray-400">Domain:</span> 
-                <span className="ml-2 font-medium text-gray-700">{cookie.domain}</span>
+                <span className="ml-2 font-medium text-gray-700">{cookie.metadata?.domain}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Category:</span> 
-                <span className="ml-2 font-medium text-gray-700">{cookie.category}</span>
+                <span className="ml-2 font-medium text-gray-700">{cookie.metadata?.category}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Path:</span> 
-                <span className="ml-2 font-mono text-gray-700">{cookie.path}</span>
+                <span className="ml-2 font-mono text-gray-700">{cookie.metadata?.path}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Expires:</span> 
@@ -230,13 +255,13 @@ export function ScanResults() {
 
             {/* AI Privacy Insight */}
             <div className="mt-4 pt-4 border-t border-gray-100">
-              <button onClick={() => toggleInsight('cookie-1')} className="flex items-center justify-between w-full px-4 py-3 bg-[#fafafa] rounded-xl border border-gray-100 group">
+              <button onClick={() => toggleInsight(`cookie-${idx}`)} className="flex items-center justify-between w-full px-4 py-3 bg-[#fafafa] rounded-xl border border-gray-100 group">
                 <div className="flex items-center gap-2 text-[#8b5cf6] font-semibold text-sm">
                   <Sparkles className="size-4 fill-current" /> AI Privacy Insight
                 </div>
                 <ChevronDown className={`size-4 text-gray-400 transition-transform ${expandedInsight === 'cookie-1' ? 'rotate-180' : ''}`} />
               </button>
-              {expandedInsight === 'cookie-1' && <LocalAiInsight type="cookie" />}
+              {expandedInsight === `cookie-${idx}` && <LocalAiInsight type="cookie" />}
             </div>
           </CardContent>
         </Card>
@@ -258,7 +283,7 @@ export function ScanResults() {
         <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <span className="text-lg font-bold text-gray-900">{id.name}</span>
+              <span className="text-lg font-bold text-gray-900">{id.metadata?.name}</span>
               <RiskBadge variant="critical" className="bg-red-50 text-red-600 border-none font-bold">
                 Critical Risk
               </RiskBadge>
@@ -267,33 +292,33 @@ export function ScanResults() {
             <div className="space-y-2 text-sm text-gray-600 mb-6">
               <p>
                 <span className="font-medium text-gray-400">Description:</span> 
-                <span className="ml-2 font-medium text-gray-700">{id.description}</span>
+                <span className="ml-2 font-medium text-gray-700">{id.metadata?.description}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Path:</span> 
-                <span className="ml-2 font-mono text-gray-700">{id.path}</span>
+                <span className="ml-2 font-mono text-gray-700">{id.metadata?.path}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Value:</span> 
-                <span className="ml-2 font-mono text-gray-700">{id.value}</span>
+                <span className="ml-2 font-mono text-gray-700">{id.metadata?.value}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Last Seen:</span> 
-                <span className="ml-2 font-medium text-gray-700">{id.lastSeen}</span>
+                <span className="ml-2 font-medium text-gray-700">{id.metadata?.lastSeen}</span>
               </p>
             </div>
 
             {/* AI Privacy Insight */}
             <div className="mt-4 pt-4 border-t border-gray-100">
               <button 
-                onClick={() => toggleInsight('id-1')} 
+                onClick={() => toggleInsight(`id-${idx}`)} 
                 className="flex items-center justify-between w-full px-4 py-3 bg-[#fafafa] rounded-xl border border-gray-100 group">
                 <div className="flex items-center gap-2 text-[#8b5cf6] font-semibold text-sm">
                   <Sparkles className="size-4 fill-current" /> AI Privacy Insight
                 </div>
                 <ChevronDown className={`size-4 text-gray-400 transition-transform ${expandedInsight === 'id-1' ? 'rotate-180' : ''}`} />
               </button>
-              {expandedInsight === 'id-1' && <LocalAiInsight type="identifier" />}
+              {expandedInsight === `id-${idx}` && <LocalAiInsight type="identifier" />}
             </div>
           </CardContent>
         </Card>
@@ -315,7 +340,7 @@ export function ScanResults() {
         <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <span className="text-lg font-bold text-gray-900">{app.name}</span>
+              <span className="text-lg font-bold text-gray-900">{app.metadata?.name}</span>
               <RiskBadge variant="high" className="bg-[#fff1e7] text-[#d97706] border-none font-bold">
                 High Risk
               </RiskBadge>
@@ -324,27 +349,27 @@ export function ScanResults() {
             <div className="space-y-2 text-sm text-gray-600 mb-6">
               <p>
                 <span className="font-medium text-gray-400">Path:</span> 
-                <span className="ml-2 font-mono text-gray-700">{app.path}</span>
+                <span className="ml-2 font-mono text-gray-700">{app.metadata?.path}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Category:</span> 
-                <span className="ml-2 font-medium text-gray-700">{app.category}</span>
+                <span className="ml-2 font-medium text-gray-700">{app.metadata?.category}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Total Size:</span> 
-                <span className="ml-2 font-medium text-gray-700">{app.size}</span>
+                <span className="ml-2 font-medium text-gray-700">{app.metadata?.size}</span>
               </p>
             </div>
 
             {/* AI Privacy Insight */}
             <div className="mt-4 pt-4 border-t border-gray-100">
-              <button onClick={() => toggleInsight('app-1')} className="flex items-center justify-between w-full px-4 py-3 bg-[#fafafa] rounded-xl border border-gray-100 group">
+              <button onClick={() => toggleInsight(`app-${idx}`)} className="flex items-center justify-between w-full px-4 py-3 bg-[#fafafa] rounded-xl border border-gray-100 group">
                 <div className="flex items-center gap-2 text-[#8b5cf6] font-semibold text-sm">
                   <Sparkles className="size-4 fill-current" /> AI Privacy Insight
                 </div>
                 <ChevronDown className={`size-4 text-gray-400 transition-transform ${expandedInsight === 'app-1' ? 'rotate-180' : ''}`} />
               </button>
-              {expandedInsight === 'app-1' && <LocalAiInsight type="app" />}
+              {expandedInsight === `app-${idx}` && <LocalAiInsight type="app" />}
             </div>
           </CardContent>
         </Card>
