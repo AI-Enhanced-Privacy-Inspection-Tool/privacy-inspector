@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
 
-from app_scanner.detection.empty_value_detector import is_empty_value
+from ..detection.empty_value_detector import is_empty_value
 from ..detection.patterns import PRIVACY_CATEGORIES, normalize_key
-from app_scanner.detection.string_detection.string_detector import detect_string_type
+from ..detection.string_detection.string_detector import detect_string_type
 
 def walk_json(obj, findings, path="", seen=None):
     """

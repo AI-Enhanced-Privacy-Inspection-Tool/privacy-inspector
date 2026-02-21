@@ -1,11 +1,11 @@
 from collections import Counter, defaultdict
 from tqdm import tqdm
 
-from app_scanner.discovery.app_data_locations import get_app_data_dirs
-from app_scanner.discovery.file_discovery import classify_file, find_candidate_files_for_scanning
-from app_scanner.extraction.json_extractor import scan_json_file
-from app_scanner.extraction.sqlite_extractor import scan_sqlite_file
-from app_scanner.extraction.text_extractor import scan_text_file
+from .discovery.app_data_locations import get_app_data_dirs
+from .discovery.file_discovery import classify_file, find_candidate_files_for_scanning
+from .extraction.json_extractor import scan_json_file
+from .extraction.sqlite_extractor import scan_sqlite_file
+from .extraction.text_extractor import scan_text_file
 
 def scan_app_files(filter_category=None):
     """
