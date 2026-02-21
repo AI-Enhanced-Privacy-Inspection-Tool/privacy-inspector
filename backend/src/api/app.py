@@ -51,11 +51,11 @@ async def scan_desktop():
     "Run the local desktop app scanner and analyze compact results with AI"
 
     try:
-        counts, _all_findings, compact_results = scan_app_files()
+        counts, all_findings, compacted_results, formatted_results = scan_app_files()
 
         data_items = []
 
-        for app_name, categories in compact_results.items():
+        for app_name, categories in compacted_results.items():
             for category in categories:
                 item = PrivacyDataItem(
                     name=f"{app_name}:{category}",
@@ -71,7 +71,8 @@ async def scan_desktop():
         # Attach raw scanner context into the summary for frontend use
         result.summary.setdefault("scanner", {})
         result.summary["scanner"]["file_counts"] = {k: int(v) for k, v in counts.items()}
-        result.summary["scanner"]["compact_results"] = compact_results
+        result.summary["scanner"]["compact_results"] = compacted_results
+        result.summary["scanner"]["formatted_results"] = formatted_results
 
         return result
 
