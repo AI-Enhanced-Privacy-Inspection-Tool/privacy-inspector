@@ -9,9 +9,20 @@ import { LocalAiInsight } from "../components/LocalAiInsight";
 export function ScanResults() {
   const [isScanning, setIsScanning] = useState(false);
   const [expandedInsight, setExpandedInsight] = useState<string | null>(null);
+  const [scanResults, setScanResults] = useState<any>(null); 
 
-  const handleStartScan = () => {
-    setIsScanning(true);
+  const handleStartScan = async () => {
+    setIsScanning(true); 
+
+    try {
+      const response = await fetch("http://localhost:8000/scan"); 
+      const data = await response.json();
+      setScanResults(data.formatted || data.compacted || data.all_findings); 
+    } catch (error) {
+      console.error("Error running scan:", error);
+    } finally {
+      setIsScanning(false); 
+    }
   };
 
   const toggleInsight = (id: string) => {
@@ -85,15 +96,15 @@ export function ScanResults() {
 
             <p className="text-blue-600/70 text-sm flex items-center gap-1">
               <span className="opacity-70">🕒</span>
-              Jan 29, 2026, 1:30 PM
+              {new Date().toLocaleString()} 
             </p>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
               {[
-                { label: "Cookies", value: "1" },
-                { label: "Identifiers", value: "1" },
-                { label: "Apps Scanned", value: "1" },
-                { label: "Total Data", value: "8.5 MB" },
+                { label: "Cookies", value: scanResults.cookies?.length || 0 },
+                { label: "Identifiers", value: scanResults.identifiers?.length || 0 },
+                { label: "Apps Scanned", value: scanResults.apps?.length || 0 },
+                { label: "Total Data", value: scanResults.totalSize || "0 MB" },
               ].map((stat) => (
                 <Card key={stat.label} className="shadow-none">
                   <CardContent className="pt-4 pb-4">
@@ -112,6 +123,7 @@ export function ScanResults() {
       </Card>
 
       {/* Critical Alert */}
+      {scanResults && scanResults.highRiskCount > 0 && (
       <Card className="bg-red-50 border-red-100 shadow-sm">
         <CardContent className="pt-6 flex items-center gap-4">
           <div className="bg-white rounded-full p-1 border border-red-200">
@@ -120,7 +132,7 @@ export function ScanResults() {
 
           <div>
             <p className="text-red-900 font-bold">
-              11 Privacy Issues Detected
+              {scanResults.highRiskCount} Privacy Issues Detected
             </p>
             <p className="text-red-700 text-sm font-medium">
               High and critical risk items requiring attention
@@ -128,25 +140,26 @@ export function ScanResults() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Summary Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
           {
             label: "Tracking Cookies",
-            value: "1",
+            value: scanResults.cookies?.length || 0,
             desc: "High-risk cookies found",
             icon: <Cookie className="w-5 h-5 text-red-600" />,
           },
           {
             label: "Identifiers",
-            value: "1",
+            value: scanResults.identifiers?.length || 0,
             desc: "Persistent tracking identifiers",
             icon: <Fingerprint className="w-5 h-5 text-red-600" />,
           },
           {
             label: "App Data",
-            value: "1",
+            value: scanResults.apps?.length || 0,
             desc: "Apps with privacy concerns",
             icon: <FolderOpen className="w-5 h-5 text-red-600" />,
           },
@@ -173,6 +186,7 @@ export function ScanResults() {
       </div>
 
       {/* High-Risk Cookies */}
+      {scanResults?.cookies?.length > 0 && (
       <section className="space-y-4">
         <div className="flex items-center gap-2">
           <Cookie className="w-6 h-6 text-red-600" />
@@ -181,12 +195,13 @@ export function ScanResults() {
           </h3>
         </div>
 
-        <Card className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
+        {scanResults.cookies.map((cookie: any, idx: number) => (
+        <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
           <CardContent className="p-6">
             {/* Header */}
             <div className="flex items-center gap-3 mb-4">
               <span className="text-lg font-bold text-gray-900">
-                fr
+                {cookie.name}
               </span>
               <RiskBadge variant="high" className="bg-[#fff1e7] text-[#d97706] border-none font-bold">
                 High Risk
@@ -197,19 +212,19 @@ export function ScanResults() {
             <div className="space-y-2 text-sm text-gray-600 mb-6">
               <p>
                 <span className="font-medium text-gray-400">Domain:</span> 
-                <span className="ml-2 font-medium text-gray-700">.facebook.com</span>
+                <span className="ml-2 font-medium text-gray-700">{cookie.domain}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Category:</span> 
-                <span className="ml-2 font-medium text-gray-700">advertising</span>
+                <span className="ml-2 font-medium text-gray-700">{cookie.category}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Path:</span> 
-                <span className="ml-2 font-mono text-gray-700">accounts.app.username</span>
+                <span className="ml-2 font-mono text-gray-700">{cookie.path}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Expires:</span> 
-                <span className="ml-2 font-medium text-gray-700">Apr 29, 2026, 3:00 AM</span>
+                <span className="ml-2 font-medium text-gray-700">{cookie.expires}</span>
               </p>
             </div>
 
@@ -225,9 +240,12 @@ export function ScanResults() {
             </div>
           </CardContent>
         </Card>
+        ))}
       </section>
+      )}
 
       {/* Persistent Identifiers */}
+      {scanResults?.identifiers?.length > 0 && (
       <section className="space-y-4">
         <div className="flex items-center gap-2">
           <Fingerprint className="w-6 h-6 text-red-600" />
@@ -236,10 +254,11 @@ export function ScanResults() {
           </h3>
         </div>
 
-        <Card className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
+        {scanResults.identifiers.map((id: any, idx: number) => (
+        <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <span className="text-lg font-bold text-gray-900">FINGERPRINT</span>
+              <span className="text-lg font-bold text-gray-900">{id.name}</span>
               <RiskBadge variant="critical" className="bg-red-50 text-red-600 border-none font-bold">
                 Critical Risk
               </RiskBadge>
@@ -248,19 +267,19 @@ export function ScanResults() {
             <div className="space-y-2 text-sm text-gray-600 mb-6">
               <p>
                 <span className="font-medium text-gray-400">Description:</span> 
-                <span className="ml-2 font-medium text-gray-700">Canvas Fingerprinting detected across multiple sites</span>
+                <span className="ml-2 font-medium text-gray-700">{id.description}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Path:</span> 
-                <span className="ml-2 font-mono text-gray-700">browser.fingerprint.canvas_id</span>
+                <span className="ml-2 font-mono text-gray-700">{id.path}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Value:</span> 
-                <span className="ml-2 font-mono text-gray-700">fp_a1b2c3d4e5...</span>
+                <span className="ml-2 font-mono text-gray-700">{id.value}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Last Seen:</span> 
-                <span className="ml-2 font-medium text-gray-700">Jan 29, 2026, 12:30 PM</span>
+                <span className="ml-2 font-medium text-gray-700">{id.lastSeen}</span>
               </p>
             </div>
 
@@ -278,9 +297,12 @@ export function ScanResults() {
             </div>
           </CardContent>
         </Card>
+        ))}
       </section>
+      )}
 
       {/* Applications */}
+      {scanResults?.apps?.length > 0 && (
       <section className="space-y-4">
         <div className="flex items-center gap-2">
           <Database className="w-6 h-6 text-red-600" />
@@ -289,10 +311,11 @@ export function ScanResults() {
           </h3>
         </div>
 
-        <Card className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
+        {scanResults.apps.map((app: any, idx: number) => (
+        <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <span className="text-lg font-bold text-gray-900">Google Chrome</span>
+              <span className="text-lg font-bold text-gray-900">{app.name}</span>
               <RiskBadge variant="high" className="bg-[#fff1e7] text-[#d97706] border-none font-bold">
                 High Risk
               </RiskBadge>
@@ -301,15 +324,15 @@ export function ScanResults() {
             <div className="space-y-2 text-sm text-gray-600 mb-6">
               <p>
                 <span className="font-medium text-gray-400">Path:</span> 
-                <span className="ml-2 font-mono text-gray-700">/Library/Application Support/Google/Chrome</span>
+                <span className="ml-2 font-mono text-gray-700">{app.path}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Category:</span> 
-                <span className="ml-2 font-medium text-gray-700">Contains PII (History, Autofill, Cookies)</span>
+                <span className="ml-2 font-medium text-gray-700">{app.category}</span>
               </p>
               <p>
                 <span className="font-medium text-gray-400">Total Size:</span> 
-                <span className="ml-2 font-medium text-gray-700">2.3 MB</span>
+                <span className="ml-2 font-medium text-gray-700">{app.size}</span>
               </p>
             </div>
 
@@ -325,7 +348,9 @@ export function ScanResults() {
             </div>
           </CardContent>
         </Card>
+        ))}
       </section>
+      )}
     </div>
   );
 }
