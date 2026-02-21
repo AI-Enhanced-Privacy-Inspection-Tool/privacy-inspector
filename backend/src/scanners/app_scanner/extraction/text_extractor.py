@@ -33,6 +33,8 @@ def scan_text_file(path):
 
     findings = []
 
+    # TODO: deal with no permission files
+
     try:
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
             walk_text(f, findings)

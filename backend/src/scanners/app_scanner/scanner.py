@@ -6,6 +6,8 @@ from app_scanner.discovery.file_discovery import classify_file, find_candidate_f
 from app_scanner.extraction.json_extractor import scan_json_file
 from app_scanner.extraction.sqlite_extractor import scan_sqlite_file
 from app_scanner.extraction.text_extractor import scan_text_file
+from app_scanner.formatting.format_results import format_results
+from app_scanner.formatting.compact_results import compact_results
 
 def scan_app_files(filter_category=None):
     """
@@ -46,9 +48,8 @@ def scan_app_files(filter_category=None):
             all_findings.append(finding)
             results[app_name].add(finding["category"])
     
-    compact_results = {
-        app: sorted(list(categories))
-        for app, categories in results.items()
-    }
+    
+    compacted_results = compact_results(all_findings)
+    formatted_results = format_results(all_findings)
 
-    return counts, all_findings, compact_results
+    return counts, all_findings, compacted_results, formatted_results
