@@ -49,7 +49,7 @@ async def analyze(request: AIAnalysisRequest):
 
 @app.post("/scan/desktop", response_model=AIAnalysisResponse)
 async def scan_desktop():
-    "Run the local desktop app scanner and analyze compact results with AI"
+    "Run the local desktop app scanner and analyze formatted results with AI"
 
     try:
         counts, all_findings, compacted_results, formatted_results = scan_app_files()
@@ -58,20 +58,28 @@ async def scan_desktop():
 
         data_items = []
 
-        for app_name, categories in compacted_results.items():
-            for category in categories:
+        # Use formatted_results for AI analysis (includes actual data previews)
+        for app_name, findings in formatted_results.get("apps", {}).items():
+            for finding in findings:
                 item = PrivacyDataItem(
-                    name=f"{app_name}:{category}",
-                    value=f"Application '{app_name}' stores data of category '{category}' on the local machine.",
+                    name=f"{app_name}:{finding['category']}",
+                    value=finding['value_preview'],
                     data_type=DataType.OTHER,
                     domain=app_name,
-                    metadata={"app_name": app_name, "category": category},
+                    metadata={
+                        "app_name": app_name,
+                        "category": finding['category'],
+                        "file_path": finding['file_path'],
+                        "field_path": finding['field_path'],
+                        "detection_method": finding['detection_method'],
+                        "confidence": finding['confidence']
+                    },
                 )
                 data_items.append(item)
 
         result = analyzer.analyze_items(data_items)
 
-        # Attach raw scanner context into the summary for frontend use
+        # Attach scanner context with formatted results at the top level
         result.summary.setdefault("scanner", {})
         result.summary["scanner"]["file_counts"] = {k: int(v) for k, v in counts.items()}
         result.summary["scanner"]["formatted_results"] = formatted_results
