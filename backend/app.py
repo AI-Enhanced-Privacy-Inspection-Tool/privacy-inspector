@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import logging
 
-from src.scanner.website_scanner import WebsiteSecurityScanner
+from src.scanners.web_scanner.website_scanner import WebsiteSecurityScanner
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
