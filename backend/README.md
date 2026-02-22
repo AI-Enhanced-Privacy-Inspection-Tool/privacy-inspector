@@ -75,6 +75,7 @@ backend/
 │   │   │   ├── discovery/
 │   │   │   ├── extraction/
 │   │   │   └── detection/
+│   │   │   └── formatting/
 │   │   └── website_scanner/
 │   │       ├── active_website_detector.py
 │   │       ├── models.py
