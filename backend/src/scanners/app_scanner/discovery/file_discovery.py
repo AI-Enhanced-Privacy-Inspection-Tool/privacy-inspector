@@ -6,7 +6,8 @@ SENSITIVE_EXTENSIONS = {
     ".db", 
     ".json", 
     ".log", 
-    ".txt"
+    ".txt",
+    ".sqlite3",
 }
 
 MAX_FILE_SIZE = 1_000_000  # 1 MB
@@ -59,8 +60,6 @@ def classify_file(path: str) -> str:
         return "sqlite"
     elif extension == ".json":
         return "json"
-    elif extension == ".xml": # not currently in SENSITIVE_EXTENSIONS but added for completeness
-        return "xml"
     elif extension in {".txt", ".log"}:
         return "text"
     else:

@@ -9,6 +9,12 @@ from app_scanner.extraction.text_extractor import scan_text_file
 from app_scanner.formatting.format_results import format_results
 from app_scanner.formatting.compact_results import compact_results
 
+SCANNERS = {
+    "sqlite": scan_sqlite_file,
+    "json": scan_json_file,
+    "text": scan_text_file,
+}
+
 def scan_app_files(filter_category=None):
     """
     Scan candidate files and return findings.
@@ -32,12 +38,11 @@ def scan_app_files(filter_category=None):
         file_type = classify_file(path)
         counts[file_type] += 1
 
-        if file_type == "json":
-            findings = scan_json_file(path)
-        elif file_type == "text":
-            findings = scan_text_file(path)
-        #if file_type == "sqlite":
-          #  findings = scan_sqlite_file(path)
+        scanner = SCANNERS.get(file_type)
+        if scanner:
+            findings = scanner(path)
+        else:
+            findings = []
 
         for finding in findings:
             if filter_category and finding["category"] != filter_category:
