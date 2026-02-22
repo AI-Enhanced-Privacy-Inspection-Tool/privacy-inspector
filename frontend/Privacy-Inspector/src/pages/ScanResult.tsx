@@ -125,10 +125,15 @@ export function ScanResults() {
             <p className="text-blue-600/70 text-sm flex items-center gap-1">
               <span className="opacity-70">🕒</span>
               {new Date().toLocaleString()} 
+              {new Date().toLocaleString()} 
             </p>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
               {[
+                { label: "Cookies", value: scanResults.cookies?.length || 0 },
+                { label: "Identifiers", value: scanResults.identifiers?.length || 0 },
+                { label: "Apps Scanned", value: scanResults.apps?.length || 0 },
+                { label: "Total Data", value: scanResults.totalSize || "0 MB" },
                 { label: "Cookies", value: scanResults.cookies?.length || 0 },
                 { label: "Identifiers", value: scanResults.identifiers?.length || 0 },
                 { label: "Apps Scanned", value: scanResults.apps?.length || 0 },
@@ -152,6 +157,7 @@ export function ScanResults() {
 
       {/* Critical Alert */}
       {scanResults && scanResults.highRiskCount > 0 && (
+      {scanResults && scanResults.highRiskCount > 0 && (
       <Card className="bg-red-50 border-red-100 shadow-sm">
         <CardContent className="pt-6 flex items-center gap-4">
           <div className="bg-white rounded-full p-1 border border-red-200">
@@ -161,6 +167,7 @@ export function ScanResults() {
           <div>
             <p className="text-red-900 font-bold">
               {scanResults.highRiskCount} Privacy Issues Detected
+              {scanResults.highRiskCount} Privacy Issues Detected
             </p>
             <p className="text-red-700 text-sm font-medium">
               High and critical risk items requiring attention
@@ -169,6 +176,7 @@ export function ScanResults() {
         </CardContent>
       </Card>
       )}
+      )}
 
       {/* Summary Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -176,17 +184,20 @@ export function ScanResults() {
           {
             label: "Tracking Cookies",
             value: scanResults.cookies?.length || 0,
+            value: scanResults.cookies?.length || 0,
             desc: "High-risk cookies found",
             icon: <Cookie className="w-5 h-5 text-red-600" />,
           },
           {
             label: "Identifiers",
             value: scanResults.identifiers?.length || 0,
+            value: scanResults.identifiers?.length || 0,
             desc: "Persistent tracking identifiers",
             icon: <Fingerprint className="w-5 h-5 text-red-600" />,
           },
           {
             label: "App Data",
+            value: scanResults.apps?.length || 0,
             value: scanResults.apps?.length || 0,
             desc: "Apps with privacy concerns",
             icon: <FolderOpen className="w-5 h-5 text-red-600" />,
@@ -215,6 +226,7 @@ export function ScanResults() {
 
       {/* High-Risk Cookies */}
       {scanResults?.cookies?.length > 0 && (
+      {scanResults?.cookies?.length > 0 && (
       <section className="space-y-4">
         <div className="flex items-center gap-2">
           <Cookie className="w-6 h-6 text-red-600" />
@@ -225,10 +237,13 @@ export function ScanResults() {
 
         {scanResults.cookies.map((cookie: any, idx: number) => (
         <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
+        {scanResults.cookies.map((cookie: any, idx: number) => (
+        <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
           <CardContent className="p-6">
             {/* Header */}
             <div className="flex items-center gap-3 mb-4">
               <span className="text-lg font-bold text-gray-900">
+                {cookie.name}
                 {cookie.name}
               </span>
               <RiskBadge variant="high" className="bg-[#fff1e7] text-[#d97706] border-none font-bold">
@@ -253,6 +268,7 @@ export function ScanResults() {
               <p>
                 <span className="font-medium text-gray-400">Expires:</span> 
                 <span className="ml-2 font-medium text-gray-700">{cookie.expires}</span>
+                <span className="ml-2 font-medium text-gray-700">{cookie.expires}</span>
               </p>
             </div>
 
@@ -269,10 +285,13 @@ export function ScanResults() {
           </CardContent>
         </Card>
         ))}
+        ))}
       </section>
+      )}
       )}
 
       {/* Persistent Identifiers */}
+      {scanResults?.identifiers?.length > 0 && (
       {scanResults?.identifiers?.length > 0 && (
       <section className="space-y-4">
         <div className="flex items-center gap-2">
@@ -282,6 +301,8 @@ export function ScanResults() {
           </h3>
         </div>
 
+        {scanResults.identifiers.map((id: any, idx: number) => (
+        <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
         {scanResults.identifiers.map((id: any, idx: number) => (
         <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
           <CardContent className="p-6">
@@ -326,10 +347,13 @@ export function ScanResults() {
           </CardContent>
         </Card>
         ))}
+        ))}
       </section>
+      )}
       )}
 
       {/* Applications */}
+      {scanResults?.apps?.length > 0 && (
       {scanResults?.apps?.length > 0 && (
       <section className="space-y-4">
         <div className="flex items-center gap-2">
@@ -339,6 +363,8 @@ export function ScanResults() {
           </h3>
         </div>
 
+        {scanResults.apps.map((app: any, idx: number) => (
+        <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
         {scanResults.apps.map((app: any, idx: number) => (
         <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
           <CardContent className="p-6">
@@ -377,7 +403,9 @@ export function ScanResults() {
           </CardContent>
         </Card>
         ))}
+        ))}
       </section>
+      )}
       )}
     </div>
   );
