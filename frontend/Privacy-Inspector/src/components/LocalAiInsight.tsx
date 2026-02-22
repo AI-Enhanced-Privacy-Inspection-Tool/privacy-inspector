@@ -1,71 +1,90 @@
-import { Sparkles } from "lucide-react";
+import { Sparkles, AlertTriangle } from "lucide-react";
 
 interface LocalAiInsightProps {
-  type: 'cookie' | 'identifier' | 'app';
+  item: any;
 }
 
-export function LocalAiInsight({ type }: LocalAiInsightProps) {
-  const getAiInsight = () => {
-    if (type === 'cookie') {
-      return {
-        analysis: "This advertising cookie was detected via key_name matching. It indicates active cross-site tracking which builds a profile of your browsing habits over time.",
-        recommendations: [
-          "Clear browser cookies and cache immediately",
-          "Block third-party cookies in browser settings",
-          "Use a privacy-focused extension to auto-delete trackers"
-        ]
-      };
-    } else if (type === 'identifier') {
-      return {
-        analysis: "A high-confidence persistent identifier was found in your local storage. Unlike standard cookies, these often persist even after clearing browser history.",
-        recommendations: [
-          "Manually audit local storage via developer tools",
-          "Enable 'Canvas' protection in your browser",
-          "Use a VPN to prevent network-level fingerprinting"
-        ]
-      };
-    } else {
-      return {
-        analysis: "This application path contains PII (Personally Identifiable Information). The presence of 'accounts.app.username' suggests local caching of sensitive credentials.",
-        recommendations: [
-          "Review the application's local data storage policy",
-          "Disable 'Remember Me' features in the app",
-          "Encrypt your local disk to protect idle application data"
-        ]
-      };
-    }
-  };
-
-  const insight = getAiInsight();
+export function LocalAiInsight({ item }: LocalAiInsightProps) {
+  const classification = item.classification || {};
+  const riskAssessment = item.risk_assessment || {};
+  const suggestions = item.suggestions || [];
 
   return (
-    <div className="mt-3 p-4 bg-[#f8f5ff] border border-[#e9d5ff] rounded-xl space-y-4 animate-in zoom-in-95 duration-300">
-      {/* Analysis Section */}
+    <div className="mt-3 p-5 bg-[#f8f5ff] border border-[#e9d5ff] rounded-xl space-y-4 animate-in zoom-in-95 duration-300">
+      {/* Classification Section */}
       <div>
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="size-4 text-[#8b5cf6] fill-current" />
           <h5 className="font-bold text-[#5b21b6] text-sm uppercase tracking-wider">AI Analysis</h5>
         </div>
-        <p className="text-sm text-[#6d28d9] leading-relaxed">
-          {insight.analysis}
+        <p className="text-sm text-[#6d28d9] leading-relaxed mb-3">
+          {classification.reasoning || 'No AI analysis available.'}
         </p>
+
+        {/* Classification Badges */}
+        <div className="flex flex-wrap gap-2 mt-2">
+          {classification.contains_pii && (
+            <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
+              Contains PII: {classification.pii_types?.join(', ')}
+            </span>
+          )}
+          {classification.is_tracking_data && (
+            <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
+              Tracking Data
+            </span>
+          )}
+          <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full capitalize">
+            {classification.sensitivity_level} Sensitivity
+          </span>
+        </div>
       </div>
 
       {/* Divider */}
       <div className="h-px bg-[#ddd6fe]" />
 
-      {/* Recommendations Section */}
-      <div>
-        <h5 className="font-bold text-[#5b21b6] text-sm mb-2">Recommendations</h5>
-        <ul className="space-y-2">
-          {insight.recommendations.map((rec, idx) => (
-            <li key={idx} className="flex items-start gap-2 text-sm text-[#7c3aed]">
-              <span className="mt-1 size-1.5 rounded-full bg-[#8b5cf6] shrink-0" />
-              {rec}
-            </li>
+      {/* Risk Assessment */}
+      {riskAssessment.risk_factors && riskAssessment.risk_factors.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="size-4 text-orange-600" />
+            <h5 className="font-bold text-[#5b21b6] text-sm">Risk Factors</h5>
+          </div>
+          <ul className="space-y-2">
+            {riskAssessment.risk_factors.map((factor: string, idx: number) => (
+              <li key={idx} className="flex items-start gap-2 text-sm text-[#7c3aed]">
+                <span className="mt-1 size-1.5 rounded-full bg-orange-500 shrink-0" />
+                {factor}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Divider */}
+      {suggestions.length > 0 && <div className="h-px bg-[#ddd6fe]" />}
+
+      {/* Suggestions Section */}
+      {suggestions.length > 0 && (
+        <div>
+          <h5 className="font-bold text-[#5b21b6] text-sm mb-2">AI Suggestions</h5>
+          {suggestions.map((suggestion: any, idx: number) => (
+            <div key={idx} className="mb-3 last:mb-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className={`px-2 py-0.5 text-xs font-bold rounded capitalize ${suggestion.priority === 'high' ? 'bg-red-100 text-red-700' :
+                    suggestion.priority === 'medium' ? 'bg-orange-100 text-orange-700' :
+                      'bg-green-100 text-green-700'
+                  }`}>
+                  {suggestion.action}
+                </span>
+                <span className="text-xs text-purple-600 capitalize">({suggestion.priority} priority)</span>
+              </div>
+              <p className="text-sm text-[#6d28d9] leading-relaxed">
+                {suggestion.reasoning}
+              </p>
+            </div>
           ))}
-        </ul>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

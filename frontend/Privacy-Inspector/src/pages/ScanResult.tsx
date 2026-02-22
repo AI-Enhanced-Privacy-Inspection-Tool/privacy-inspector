@@ -1,4 +1,4 @@
-import { ShieldCheck, AlertCircle, Cookie, Fingerprint, Database, FolderOpen, Play, Sparkles, ChevronDown } from "lucide-react";
+import { ShieldCheck, AlertCircle, Fingerprint, Database, FolderOpen, Play, Sparkles, ChevronDown } from "lucide-react";
 import { RiskBadge } from "../components/RiskBadge";
 import { Card, CardContent } from "../components/Card";
 import { Button } from "../components/Button";
@@ -9,16 +9,10 @@ import { LocalAiInsight } from "../components/LocalAiInsight";
 export function ScanResults() {
   const [isScanning, setIsScanning] = useState(false);
   const [expandedInsight, setExpandedInsight] = useState<string | null>(null);
-  const [scanResults, setScanResults] = useState<any>({
-    cookies: [],
-    identifiers: [],
-    apps: [],
-    totalSize: "0 MB",
-    highRiskCount: 0,
-  }); 
+  const [scanResults, setScanResults] = useState<any>(null);
 
   const handleStartScan = async () => {
-    setIsScanning(true); 
+    setIsScanning(true);
 
     try {
       const response = await fetch("http://localhost:8000/scan/desktop", {
@@ -26,32 +20,32 @@ export function ScanResults() {
       });
       const data = await response.json();
 
-      const scanner = data.summary?.scanner || {};
-      const formattedResults = scanner.formatted_results || [];
-
-      // Map to frontend structure
-      const cookies = formattedResults.filter((item: any) => item.metadata?.category === "cookie");
-      const identifiers = formattedResults.filter((item: any) => item.metadata?.category === "identifier");
-      const apps = formattedResults.filter((item: any) => item.metadata?.category === "app");
-
-      // Calculate total size if available
-      const totalSize = apps.reduce((acc: number, app: any) => acc + (app.metadata?.size || 0), 0);
-      const highRiskCount = formattedResults.filter((item: any) => item.risk === "high" || item.risk === "critical").length;
-
-      setScanResults({
-        cookies,
-        identifiers,
-        apps,
-        totalSize: totalSize > 0 ? `${totalSize} MB` : "0 MB",
-        highRiskCount,
-      });
+      console.log("Scan results:", data);
+      setScanResults(data);
     } catch (error) {
       console.error("Error running scan:", error);
     } finally {
-      console.log("Scan completed or failed. Results:", scanResults);
-      setIsScanning(false); 
+      setIsScanning(false);
     }
   };
+
+  // Helper function to get stats
+  const getStats = () => {
+    if (!scanResults) return { totalItems: 0, piiCount: 0, trackingCount: 0, highRiskCount: 0, appCount: 0 };
+
+    const summary = scanResults.summary || {};
+    const apps = summary.scanner?.formatted_results?.apps || {};
+
+    return {
+      totalItems: summary.total_items || 0,
+      piiCount: summary.pii_count || 0,
+      trackingCount: summary.tracking_count || 0,
+      highRiskCount: summary.high_risk_count || 0,
+      appCount: Object.keys(apps).length
+    };
+  };
+
+  const stats = getStats();
 
   const toggleInsight = (id: string) => {
     setExpandedInsight(expandedInsight === id ? null : id);
@@ -62,7 +56,7 @@ export function ScanResults() {
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-6 space-y-8 animate-in fade-in duration-500">  
+    <div className="w-full max-w-6xl mx-auto px-6 space-y-8 animate-in fade-in duration-500">
       {/* Header */}
       <div className="space-y-6">
         <div>
@@ -92,9 +86,9 @@ export function ScanResults() {
 
             {/* Action Button */}
             <div className="mt-2">
-              <Button size="lg" 
+              <Button size="lg"
                 icon={Play}
-                onClick={handleStartScan} 
+                onClick={handleStartScan}
                 className="bg-[#1a68ff] hover:bg-[#0052cc] rounded-lg px-8 font-semibold">
                 Run Scan
               </Button>
@@ -103,7 +97,7 @@ export function ScanResults() {
             {/* Note Section */}
             <div className="mt-4 bg-white/60 rounded-xl p-4 border border-white/40">
               <p className="text-sm text-gray-600">
-                <span className="font-bold text-gray-800">Note:</span> The scan will analyze browser cookies, local storage, session data, and application data for privacy risks. This process may take a few moments.
+                <span className="font-bold text-gray-800">Note:</span> The scan will analyze browser cookies, local storage, session data, and application data for privacy risks. This process typically takes 10-20 minutes depending on the amount of data stored on your system.
               </p>
             </div>
           </div>
@@ -124,20 +118,15 @@ export function ScanResults() {
 
             <p className="text-blue-600/70 text-sm flex items-center gap-1">
               <span className="opacity-70">🕒</span>
-              {new Date().toLocaleString()} 
-              {new Date().toLocaleString()} 
+              {new Date().toLocaleString()}
             </p>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
               {[
-                { label: "Cookies", value: scanResults.cookies?.length || 0 },
-                { label: "Identifiers", value: scanResults.identifiers?.length || 0 },
-                { label: "Apps Scanned", value: scanResults.apps?.length || 0 },
-                { label: "Total Data", value: scanResults.totalSize || "0 MB" },
-                { label: "Cookies", value: scanResults.cookies?.length || 0 },
-                { label: "Identifiers", value: scanResults.identifiers?.length || 0 },
-                { label: "Apps Scanned", value: scanResults.apps?.length || 0 },
-                { label: "Total Data", value: scanResults.totalSize || "0 MB" },
+                { label: "Total Items", value: stats.totalItems },
+                { label: "PII Found", value: stats.piiCount },
+                { label: "Tracking Items", value: stats.trackingCount },
+                { label: "Apps Scanned", value: stats.appCount },
               ].map((stat) => (
                 <Card key={stat.label} className="shadow-none">
                   <CardContent className="pt-4 pb-4">
@@ -156,255 +145,200 @@ export function ScanResults() {
       </Card>
 
       {/* Critical Alert */}
-      {scanResults && scanResults.highRiskCount > 0 && (
-      {scanResults && scanResults.highRiskCount > 0 && (
-      <Card className="bg-red-50 border-red-100 shadow-sm">
-        <CardContent className="pt-6 flex items-center gap-4">
-          <div className="bg-white rounded-full p-1 border border-red-200">
-            <AlertCircle className="w-6 h-6 text-red-600" />
-          </div>
+      {scanResults && stats.highRiskCount > 0 && (
+        <Card className="bg-red-50 border-red-100 shadow-sm">
+          <CardContent className="pt-6 flex items-center gap-4">
+            <div className="bg-white rounded-full p-1 border border-red-200">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            </div>
 
-          <div>
-            <p className="text-red-900 font-bold">
-              {scanResults.highRiskCount} Privacy Issues Detected
-              {scanResults.highRiskCount} Privacy Issues Detected
-            </p>
-            <p className="text-red-700 text-sm font-medium">
-              High and critical risk items requiring attention
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+            <div>
+              <p className="text-red-900 font-bold">
+                {stats.highRiskCount} High Risk Privacy Issues Detected
+              </p>
+              <p className="text-red-700 text-sm font-medium">
+                Critical items requiring immediate attention
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Privacy Issues Alert */}
+      {scanResults && stats.totalItems > 0 && (
+        <Card className="bg-red-50 border-red-200 shadow-sm">
+          <CardContent className="pt-6 pb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="bg-red-100 rounded-full p-3">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <p className="text-red-900 font-bold text-lg">
+                    {stats.totalItems} Privacy Issues Detected
+                  </p>
+                  <p className="text-red-700 text-sm font-medium">
+                    High and critical risk items requiring attention
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
       )}
 
       {/* Summary Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          {
-            label: "Tracking Cookies",
-            value: scanResults.cookies?.length || 0,
-            value: scanResults.cookies?.length || 0,
-            desc: "High-risk cookies found",
-            icon: <Cookie className="w-5 h-5 text-red-600" />,
-          },
-          {
-            label: "Identifiers",
-            value: scanResults.identifiers?.length || 0,
-            value: scanResults.identifiers?.length || 0,
-            desc: "Persistent tracking identifiers",
-            icon: <Fingerprint className="w-5 h-5 text-red-600" />,
-          },
-          {
-            label: "App Data",
-            value: scanResults.apps?.length || 0,
-            value: scanResults.apps?.length || 0,
-            desc: "Apps with privacy concerns",
-            icon: <FolderOpen className="w-5 h-5 text-red-600" />,
-          },
-        ].map((stat) => (
-          <Card key={stat.label} className="shadow-sm">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-6">
-                {stat.icon}
-                <span className="text-gray-900 font-semibold text-sm">
-                  {stat.label}
-                </span>
-              </div>
+      {scanResults && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            {
+              label: "PII Found",
+              value: stats.piiCount,
+              desc: "Personal information detected",
+              icon: <Database className="w-5 h-5 text-red-600" />,
+            },
+            {
+              label: "Tracking Items",
+              value: stats.trackingCount,
+              desc: "Tracking data found",
+              icon: <Fingerprint className="w-5 h-5 text-orange-600" />,
+            },
+            {
+              label: "Applications",
+              value: stats.appCount,
+              desc: "Apps with privacy data",
+              icon: <FolderOpen className="w-5 h-5 text-blue-600" />,
+            },
+          ].map((stat) => (
+            <Card key={stat.label} className="shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-6">
+                  {stat.icon}
+                  <span className="text-gray-900 font-semibold text-sm">
+                    {stat.label}
+                  </span>
+                </div>
 
-              <p className="text-3xl font-bold text-red-600">
-                {stat.value}
-              </p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {stat.value}
+                </p>
 
-              <p className="text-xs text-gray-400 font-medium mt-1">
-                {stat.desc}
-              </p>
+                <p className="text-xs text-gray-400 font-medium mt-1">
+                  {stat.desc}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* AI Analyzed Items */}
+      {scanResults?.analyzed_items && scanResults.analyzed_items.length > 0 && (
+        <section className="space-y-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-6 h-6 text-purple-600" />
+              <h3 className="text-xl font-bold text-gray-900">
+                Privacy Scan Results
+              </h3>
+            </div>
+            <p className="text-gray-500 text-sm ml-8">
+              Detailed analysis of privacy data found on your system
+            </p>
+          </div>
+
+          {scanResults.analyzed_items.map((item: any, idx: number) => (
+            <Card key={idx} className="border-gray-200 bg-white rounded-2xl overflow-hidden shadow-sm">
+              <CardContent className="p-6">
+                {/* Header */}
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-bold text-gray-900">
+                      {item.name.split(':')[1] || item.name}
+                    </span>
+                    <RiskBadge variant={item.risk_assessment?.risk_level || 'low'} className={`
+                  ${item.risk_assessment?.risk_level === 'high' ? 'bg-red-50 text-red-600' : ''}
+                  ${item.risk_assessment?.risk_level === 'medium' ? 'bg-orange-50 text-orange-600' : ''}
+                  ${item.risk_assessment?.risk_level === 'low' ? 'bg-green-50 text-green-600' : ''}
+                  border-none font-bold capitalize
+                `}>
+                      {item.risk_assessment?.risk_level || 'low'} Risk
+                    </RiskBadge>
+                  </div>
+                </div>
+
+                {/* App Name */}
+                <p className="text-sm font-semibold text-gray-600 mb-4">
+                  Application: <span className="text-gray-900">{item.domain}</span>
+                </p>
+
+                {/* Value Preview */}
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <p className="text-xs font-medium text-gray-400 mb-1">Value Preview</p>
+                  <p className="text-sm font-mono text-gray-700 truncate">{item.value}</p>
+                </div>
+
+                {/* Information */}
+                <div className="space-y-2 text-sm text-gray-600 mb-6">
+                  {item.metadata && (
+                    <>
+                      <p>
+                        <span className="font-medium text-gray-400">Category:</span>
+                        <span className="ml-2 font-medium text-gray-700">{item.metadata.category}</span>
+                      </p>
+                      <p>
+                        <span className="font-medium text-gray-400">Detection Method:</span>
+                        <span className="ml-2 font-medium text-gray-700">{item.metadata.detection_method}</span>
+                      </p>
+                      <p>
+                        <span className="font-medium text-gray-400">Confidence:</span>
+                        <span className="ml-2 font-medium text-gray-700 capitalize">{item.metadata.confidence}</span>
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                {/* AI Privacy Insight */}
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <button onClick={() => toggleInsight(`item-${idx}`)} className="flex items-center justify-between w-full px-4 py-3 bg-[#fafafa] rounded-xl border border-gray-100 group hover:bg-purple-50 transition-colors">
+                    <div className="flex items-center gap-2 text-[#8b5cf6] font-semibold text-sm">
+                      <Sparkles className="size-4 fill-current" /> AI Privacy Insight
+                    </div>
+                    <ChevronDown className={`size-4 text-gray-400 transition-transform ${expandedInsight === `item-${idx}` ? 'rotate-180' : ''}`} />
+                  </button>
+                  {expandedInsight === `item-${idx}` && <LocalAiInsight item={item} />}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </section>
+      )}
+      )}
+
+      {/* Recommendations */}
+      {scanResults?.recommendations && scanResults.recommendations.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-6 h-6 text-blue-600" />
+            <h3 className="text-xl font-bold text-gray-900">
+              AI Recommendations
+            </h3>
+          </div>
+
+          <Card className="border-blue-200 bg-blue-50 rounded-2xl">
+            <CardContent className="p-6">
+              <ul className="space-y-3">
+                {scanResults.recommendations.map((rec: string, idx: number) => (
+                  <li key={idx} className="flex items-start gap-3 text-sm text-blue-900">
+                    <span className="mt-1.5 size-2 rounded-full bg-blue-600 shrink-0" />
+                    <span>{rec}</span>
+                  </li>
+                ))}
+              </ul>
             </CardContent>
           </Card>
-        ))}
-      </div>
-
-      {/* High-Risk Cookies */}
-      {scanResults?.cookies?.length > 0 && (
-      {scanResults?.cookies?.length > 0 && (
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Cookie className="w-6 h-6 text-red-600" />
-          <h3 className="text-xl font-bold text-gray-900">
-            High-Risk Cookies
-          </h3>
-        </div>
-
-        {scanResults.cookies.map((cookie: any, idx: number) => (
-        <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
-        {scanResults.cookies.map((cookie: any, idx: number) => (
-        <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
-          <CardContent className="p-6">
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-lg font-bold text-gray-900">
-                {cookie.name}
-                {cookie.name}
-              </span>
-              <RiskBadge variant="high" className="bg-[#fff1e7] text-[#d97706] border-none font-bold">
-                High Risk
-              </RiskBadge>
-            </div>
-
-            {/* Information */}
-            <div className="space-y-2 text-sm text-gray-600 mb-6">
-              <p>
-                <span className="font-medium text-gray-400">Domain:</span> 
-                <span className="ml-2 font-medium text-gray-700">{cookie.metadata?.domain}</span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-400">Category:</span> 
-                <span className="ml-2 font-medium text-gray-700">{cookie.metadata?.category}</span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-400">Path:</span> 
-                <span className="ml-2 font-mono text-gray-700">{cookie.metadata?.path}</span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-400">Expires:</span> 
-                <span className="ml-2 font-medium text-gray-700">{cookie.expires}</span>
-                <span className="ml-2 font-medium text-gray-700">{cookie.expires}</span>
-              </p>
-            </div>
-
-            {/* AI Privacy Insight */}
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <button onClick={() => toggleInsight(`cookie-${idx}`)} className="flex items-center justify-between w-full px-4 py-3 bg-[#fafafa] rounded-xl border border-gray-100 group">
-                <div className="flex items-center gap-2 text-[#8b5cf6] font-semibold text-sm">
-                  <Sparkles className="size-4 fill-current" /> AI Privacy Insight
-                </div>
-                <ChevronDown className={`size-4 text-gray-400 transition-transform ${expandedInsight === 'cookie-1' ? 'rotate-180' : ''}`} />
-              </button>
-              {expandedInsight === `cookie-${idx}` && <LocalAiInsight type="cookie" />}
-            </div>
-          </CardContent>
-        </Card>
-        ))}
-        ))}
-      </section>
-      )}
-      )}
-
-      {/* Persistent Identifiers */}
-      {scanResults?.identifiers?.length > 0 && (
-      {scanResults?.identifiers?.length > 0 && (
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Fingerprint className="w-6 h-6 text-red-600" />
-          <h3 className="text-xl font-bold text-gray-900">
-            Persistent Identifiers
-          </h3>
-        </div>
-
-        {scanResults.identifiers.map((id: any, idx: number) => (
-        <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
-        {scanResults.identifiers.map((id: any, idx: number) => (
-        <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-lg font-bold text-gray-900">{id.metadata?.name}</span>
-              <RiskBadge variant="critical" className="bg-red-50 text-red-600 border-none font-bold">
-                Critical Risk
-              </RiskBadge>
-            </div>
-
-            <div className="space-y-2 text-sm text-gray-600 mb-6">
-              <p>
-                <span className="font-medium text-gray-400">Description:</span> 
-                <span className="ml-2 font-medium text-gray-700">{id.metadata?.description}</span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-400">Path:</span> 
-                <span className="ml-2 font-mono text-gray-700">{id.metadata?.path}</span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-400">Value:</span> 
-                <span className="ml-2 font-mono text-gray-700">{id.metadata?.value}</span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-400">Last Seen:</span> 
-                <span className="ml-2 font-medium text-gray-700">{id.metadata?.lastSeen}</span>
-              </p>
-            </div>
-
-            {/* AI Privacy Insight */}
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <button 
-                onClick={() => toggleInsight(`id-${idx}`)} 
-                className="flex items-center justify-between w-full px-4 py-3 bg-[#fafafa] rounded-xl border border-gray-100 group">
-                <div className="flex items-center gap-2 text-[#8b5cf6] font-semibold text-sm">
-                  <Sparkles className="size-4 fill-current" /> AI Privacy Insight
-                </div>
-                <ChevronDown className={`size-4 text-gray-400 transition-transform ${expandedInsight === 'id-1' ? 'rotate-180' : ''}`} />
-              </button>
-              {expandedInsight === `id-${idx}` && <LocalAiInsight type="identifier" />}
-            </div>
-          </CardContent>
-        </Card>
-        ))}
-        ))}
-      </section>
-      )}
-      )}
-
-      {/* Applications */}
-      {scanResults?.apps?.length > 0 && (
-      {scanResults?.apps?.length > 0 && (
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Database className="w-6 h-6 text-red-600" />
-          <h3 className="text-xl font-bold text-gray-900">
-            Applications with Privacy Concerns
-          </h3>
-        </div>
-
-        {scanResults.apps.map((app: any, idx: number) => (
-        <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
-        {scanResults.apps.map((app: any, idx: number) => (
-        <Card key={idx} className="border-[#ffe4d6] bg-white rounded-2xl overflow-hidden shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-lg font-bold text-gray-900">{app.metadata?.name}</span>
-              <RiskBadge variant="high" className="bg-[#fff1e7] text-[#d97706] border-none font-bold">
-                High Risk
-              </RiskBadge>
-            </div>
-
-            <div className="space-y-2 text-sm text-gray-600 mb-6">
-              <p>
-                <span className="font-medium text-gray-400">Path:</span> 
-                <span className="ml-2 font-mono text-gray-700">{app.metadata?.path}</span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-400">Category:</span> 
-                <span className="ml-2 font-medium text-gray-700">{app.metadata?.category}</span>
-              </p>
-              <p>
-                <span className="font-medium text-gray-400">Total Size:</span> 
-                <span className="ml-2 font-medium text-gray-700">{app.metadata?.size}</span>
-              </p>
-            </div>
-
-            {/* AI Privacy Insight */}
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <button onClick={() => toggleInsight(`app-${idx}`)} className="flex items-center justify-between w-full px-4 py-3 bg-[#fafafa] rounded-xl border border-gray-100 group">
-                <div className="flex items-center gap-2 text-[#8b5cf6] font-semibold text-sm">
-                  <Sparkles className="size-4 fill-current" /> AI Privacy Insight
-                </div>
-                <ChevronDown className={`size-4 text-gray-400 transition-transform ${expandedInsight === 'app-1' ? 'rotate-180' : ''}`} />
-              </button>
-              {expandedInsight === `app-${idx}` && <LocalAiInsight type="app" />}
-            </div>
-          </CardContent>
-        </Card>
-        ))}
-        ))}
-      </section>
+        </section>
       )}
       )}
     </div>
