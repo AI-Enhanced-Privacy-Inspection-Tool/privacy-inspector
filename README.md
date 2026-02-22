@@ -13,8 +13,8 @@ A local tool that scans your computer for privacy-relevant data stored by browse
 
 - [Features](#features)
 - [Project Structure](#project-structure)
-- [Setup](#setup)
 - [Demo](#demo)
+- [Setup](#setup)
 - [Privacy](#privacy)
 
 ## Features
@@ -51,16 +51,16 @@ privacy-inspector/
 └── README.md                   # Main project README
 ```
 
+## Demo
+
+Video or picture presentation of application
+
 ## Setup
 
 For detailed setup instructions, please refer to the README files in the respective directories:
 
 - **Backend Setup**: See `/backend/README.md`
 - **Frontend Setup**: See `/frontend/README.md`
-
-## Demo
-
-Video or picture presentation of application
 
 ## Privacy
 
