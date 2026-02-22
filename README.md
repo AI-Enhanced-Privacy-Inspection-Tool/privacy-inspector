@@ -9,6 +9,14 @@
 
 A local tool that scans your computer for privacy-relevant data stored by browsers and applications, uses AI to analyze and classify findings, and provides actionable recommendations.
 
+## Table of Contents
+
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Setup](#setup)
+- [Demo](#demo)
+- [Privacy](#privacy)
+
 ## Features
 
 - Scans browser storage (cookies, local storage, cache) and app configs
@@ -49,6 +57,10 @@ For detailed setup instructions, please refer to the README files in the respect
 
 - **Backend Setup**: See `/backend/README.md`
 - **Frontend Setup**: See `/frontend/README.md`
+
+## Demo
+
+Video or picture presentation of application
 
 ## Privacy
 
