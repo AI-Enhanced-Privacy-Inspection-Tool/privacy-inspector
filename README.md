@@ -1,5 +1,12 @@
 # AI-Enhanced Privacy Inspection Tool
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/TailwindCSS-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="TailwindCSS" />
+  <img src="https://img.shields.io/badge/Gemini-3F51B5?style=for-the-badge" alt="Gemini API" />
+</p>
+
 A local tool that scans your computer for privacy-relevant data stored by browsers and applications, uses AI to analyze and classify findings, and provides actionable recommendations.
 
 ## Features
