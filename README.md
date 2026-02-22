@@ -19,28 +19,29 @@ privacy-inspector/
 │   │   ├── ai_analysis/       # AI classification and detection
 │   │   ├── risk_assessment/   # Risk scoring and recommendations
 │   │   └── api/               # REST API endpoints
-│   ├── config/
-│   ├── tests/
-│   └── requirements.txt
+│   ├── config/                # Configuration files
+│   ├── tests/                 # Unit and integration tests
+│   ├── requirements.txt       # Python dependencies
+│   └── README.md              # Backend setup guide
 │
-└── frontend/                   # Web interface
+├── frontend/                   # Web interface
+│   ├── src/
+│   ├── public/
+│   ├── package.json           # Node dependencies
+│   └── README.md              # Frontend setup guide
+│
+├── docs/                       # Documentation
+├── .gitignore
+├── LICENSE
+└── README.md                   # Main project README
 ```
 
 ## Setup
 
-**Backend:**
-```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate          # Windows
-pip install -r requirements.txt
-```
+For detailed setup instructions, please refer to the README files in the respective directories:
 
-**Frontend:**
-```bash
-cd frontend
-# Setup 
-```
+- **Backend Setup**: See `/backend/README.md`
+- **Frontend Setup**: See `/frontend/README.md`
 
 ## Privacy
 
