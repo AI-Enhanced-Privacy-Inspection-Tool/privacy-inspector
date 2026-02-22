@@ -5,7 +5,7 @@ from pathlib import Path
 # for running this file directly as `python main.py` from inside the `app_scanner` folder
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app_scanner.scanner import scan_app_files
+from .scanner import scan_app_files
 
 def main():
     counts, findings, compacted_results, formatted_results = scan_app_files()

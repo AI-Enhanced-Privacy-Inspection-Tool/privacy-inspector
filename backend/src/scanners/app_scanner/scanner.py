@@ -1,13 +1,16 @@
+import logging
 from collections import Counter, defaultdict
 from tqdm import tqdm
 
-from app_scanner.discovery.app_data_locations import get_app_data_dirs
-from app_scanner.discovery.file_discovery import classify_file, find_candidate_files_for_scanning
-from app_scanner.extraction.json_extractor import scan_json_file
-from app_scanner.extraction.sqlite_extractor import scan_sqlite_file
-from app_scanner.extraction.text_extractor import scan_text_file
-from app_scanner.formatting.format_results import format_results
-from app_scanner.formatting.compact_results import compact_results
+from .discovery.app_data_locations import get_app_data_dirs
+from .discovery.file_discovery import classify_file, find_candidate_files_for_scanning
+from .extraction.json_extractor import scan_json_file
+from .extraction.sqlite_extractor import scan_sqlite_file
+from .extraction.text_extractor import scan_text_file
+from .formatting.format_results import format_results
+from .formatting.compact_results import compact_results
+
+logger = logging.getLogger(__name__)
 
 def scan_app_files(filter_category=None):
     """
@@ -18,8 +21,10 @@ def scan_app_files(filter_category=None):
             If provided, only findings matching this category are returned.
     """
 
+    logger.info("Starting scan...")
     appdata_dirs = get_app_data_dirs()
     candidate_files = find_candidate_files_for_scanning(appdata_dirs)
+    logger.info(f"Scanning {len(candidate_files)} files...")
 
     counts = Counter()
     all_findings = []
@@ -48,6 +53,7 @@ def scan_app_files(filter_category=None):
             all_findings.append(finding)
             results[app_name].add(finding["category"])
     
+    logger.info(f"Scan complete: {len(all_findings)} findings from {len(results)} apps")
     compacted_results = compact_results(all_findings)
     formatted_results = format_results(all_findings)
 
