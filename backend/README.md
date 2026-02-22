@@ -44,6 +44,16 @@ Run the local desktop scanner and AI analysis in one step.
 	- `summary` including counts and risk breakdown
 	- `summary.scanner.file_counts` and `summary.scanner.compact_results`
 
+### POST /scan/website
+Scan websites for privacy-related data and perform AI analysis.
+- Scans websites for privacy-related data in HTML/JavaScript
+- Extracts tracking scripts, cookies, and data collection mechanisms
+- Sends findings into Gemini for risk analysis
+- Returns an `AIAnalysisResponse` with:
+	- `analyzed_items`: one per detected privacy concern
+	- `summary` including counts and risk breakdown
+	- `summary.scanner.domains` and `summary.scanner.trackers`
+
 ## Testing
 
 Postman or visit http://localhost:8000/docs for interactive API docs
@@ -59,12 +69,16 @@ backend/
 │   │   ├── prompts.py
 │   │   └── service.py
 │   ├── scanners/
-│   │   └── app_scanner/
-│   │       ├── scanner.py
-│   │       ├── main.py
-│   │       ├── discovery/
-│   │       ├── extraction/
-│   │       └── detection/
+│   │   ├── app_scanner/
+│   │   │   ├── scanner.py
+│   │   │   ├── main.py
+│   │   │   ├── discovery/
+│   │   │   ├── extraction/
+│   │   │   └── detection/
+│   │   └── website_scanner/
+│   │       ├── active_website_detector.py
+│   │       ├── models.py
+│   │       └── website_scanner.py
 │   └── api/app.py
 └── requirements.txt
 ```
