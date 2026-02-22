@@ -1,116 +1,82 @@
-"""
-Flask Application Integration for Website Scanner
-
-This module shows how to integrate the website scanner with the main Flask app.
-"""
-
-from flask import Flask, jsonify
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import logging
+
+from src.scanner.website_scanner import WebsiteSecurityScanner
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Create FastAPI app
+app = FastAPI(
+    title="Privacy Inspector API",
+    description="AI-powered privacy data analysis and website security scanning",
+    version="1.0.0",
+)
 
-def create_app():
-    """
-    Create and configure Flask application with website scanner.
-    
-    Returns:
-        Flask: Configured Flask application
-    """
-    app = Flask(__name__)
-    
-    # ============================================
-    # Configuration
-    # ============================================
-    app.config['JSON_SORT_KEYS'] = False
-    app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
-    
-    # Scanner configuration
-    app.config['SCANNER_CONFIG'] = {
-        'enabled': True,
-        'timeout': 10,
-        'max_urls_per_request': 20,
-        'browser_scan_limit': 50,
-        'concurrent_scans': False  # Serial scanning for stability
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Initialize scanner
+scanner = WebsiteSecurityScanner()
+
+class WebsiteScanRequest(BaseModel):
+    url: str
+
+
+@app.get("/")
+def root():
+    """Root endpoint."""
+    return {
+        "name": "Privacy Inspector API",
+        "version": "1.0.0",
+        "status": "running"
     }
+
+
+@app.get("/health")
+def health():
+    """Health check endpoint."""
+    return {
+        "status": "ok",
+        "scanner_enabled": True
+    }
+
+
+@app.post("/scan/website")
+async def scan_website(request: WebsiteScanRequest):
+    """
+    Scan a website for security and privacy risks.
     
-    # ============================================
-    # Register Blueprints
-    # ============================================
+    Args:
+        request: WebsiteScanRequest with URL to scan
+        
+    Returns:
+        Scan report with security findings
+    """
     try:
-        from src.api.website_scanner_routes import website_scanner_bp
-        app.register_blueprint(website_scanner_bp)
-        logger.info("✓ Website Scanner API registered")
-    except ImportError as e:
-        logger.warning(f"Could not import website scanner: {e}")
-    
-    # ============================================
-    # Health Check Endpoint
-    # ============================================
-    @app.route('/api/health', methods=['GET'])
-    def health():
-        """Application health check."""
-        return jsonify({
-            'status': 'healthy',
-            'services': {
-                'app': 'running',
-                'scanner': app.config['SCANNER_CONFIG']['enabled']
-            }
-        }), 200
-    
-    # ============================================
-    # Error Handlers
-    # ============================================
-    @app.errorhandler(404)
-    def not_found(error):
-        """Handle 404 errors."""
-        return jsonify({
-            'success': False,
-            'error': 'Endpoint not found'
-        }), 404
-    
-    @app.errorhandler(500)
-    def internal_error(error):
-        """Handle 500 errors."""
-        logger.error(f"Internal server error: {str(error)}")
-        return jsonify({
-            'success': False,
-            'error': 'Internal server error'
-        }), 500
-    
-    return app
-
-
-if __name__ == '__main__':
-    app = create_app()
-    
-    # Run development server
-    print("""
-    ╔════════════════════════════════════════════════════════════╗
-    ║        Privacy Inspector - Website Security Scanner        ║
-    ║                  Development Server                        ║
-    ╚════════════════════════════════════════════════════════════╝
-    
-    Available Endpoints:
-    
-    Scanner API:
-    ├── POST  /api/scanner/scan
-    ├── POST  /api/scanner/scan/summary
-    ├── GET   /api/scanner/active-websites
-    ├── GET   /api/scanner/scan-active
-    ├── POST  /api/scanner/scan-multiple
-    ├── POST  /api/scanner/risky-websites
-    └── GET   /api/scanner/health
-    
-    General:
-    └── GET   /api/health
-    
-    Documentation:
-    └── See WEBSITE_SCANNER_GUIDE.md for detailed API documentation
-    
-    Starting server at http://localhost:5000
-    """)
-    
-    app.run(debug=True, host='localhost', port=5000)
+        url = request.url.strip()
+        
+        if not url:
+            raise HTTPException(status_code=400, detail="URL cannot be empty")
+        
+        logger.info(f"Starting scan for: {url}")
+        report = scanner.scan_website(url)
+        logger.info(f"Scan completed for {url} with risk level: {report['overall_risk_level']}")
+        
+        return {
+            "success": True,
+            "data": report
+        }
+        
+    except Exception as e:
+        logger.error(f"Error scanning website: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Website scan failed: {str(e)}")
