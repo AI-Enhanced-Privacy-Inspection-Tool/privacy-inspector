@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime
 from typing import List, Dict
 from google import genai
@@ -17,6 +18,8 @@ from .models import (
     RiskLevel
 )
 
+logger = logging.getLogger(__name__)
+
 
 class AIAnalyzer:
     
@@ -30,14 +33,18 @@ class AIAnalyzer:
     def analyze_items(self, data_items: List[PrivacyDataItem]) -> AIAnalysisResponse:
         analyzed = []
         
+        logger.info(f"Starting analysis of {len(data_items)} items")
+        
         for item in data_items:
             try:
                 result = self._analyze_one_item(item)
                 analyzed.append(result)
+                logger.info(f"Successfully analyzed: {item.name}")
             except Exception as e:
-                print(f"Error analyzing {item.name}: {e}")
+                logger.error(f"Error analyzing {item.name}: {e}")
                 continue
         
+        logger.info(f"Completed analysis of {len(analyzed)} items")
         summary = self._make_summary(analyzed)
         recommendations = self._make_recommendations(analyzed)
         
